@@ -12,33 +12,33 @@ namespace Xtl
 {
     public class EntityBuilder<T> where T : Record
     {
-        private readonly List<Func<T, XmlNode?>> _saveActions = new List<Func<T, XmlNode?>>();
-        //private readonly XmlDocument _document;
+        private readonly List<Func<T, XmlDocument, T?, XmlNode?>> _saveActions = new List<Func<T, XmlDocument, T?, XmlNode?>>();
 
-        private readonly Table<T> _parentTable;
-
-        public EntityBuilder(Table<T> paretTable)
+        public EntityBuilder()
         {
-            _parentTable = paretTable;
+            
         }
 
         public void AddSaveRule<D>(Expression<Func<T, D>> saveAction)
         {
-            Func<T, XmlNode?> action = (T e) =>
+            Func<T, XmlDocument, T?, XmlNode?> action = (T record, XmlDocument document, T? defRecord) =>
             {
-                string name = Helper.GetPropertyInfo(e, saveAction).Name;
+                string name = Helper.GetPropertyInfo(record, saveAction).Name;
                 var output = new StringBuilder();
 
                 Func<T, D> func = saveAction.Compile();
 
-                if (_parentTable.Default != null)
+                bool isDefaultValue = false;
+
+                if (defRecord != null)
+                    if (func.Invoke(record).Equals(func.Invoke(defRecord)))
+                        isDefaultValue = true;
+
+                if (isDefaultValue == false)
                 {
-                    if (func.Invoke(e).Equals(func.Invoke(_parentTable.Default)) == false)
-                    {
-                        XmlNode node = _parentTable.Document.CreateNode(XmlNodeType.Element, name, null);
-                        node.InnerXml = Helper.ToXmlValue(func.Invoke(e));
-                        return node;
-                    }
+                    XmlNode node = document.CreateNode(XmlNodeType.Element, name, null);
+                    node.InnerXml = Helper.ToXmlValue(func.Invoke(record));
+                    return node;
                 }
 
                 return null;
@@ -47,12 +47,13 @@ namespace Xtl
             _saveActions.Add(action);
         }
 
-        public void SaveNode(XmlNode tableNode, T record)
+        public void SaveNode(XmlNode tableNode, T record, T? defRecord)
         {
-            XmlNode recordNode = _parentTable.Document.CreateNode(XmlNodeType.Element, typeof(T).Name, null);
+            XmlDocument document = tableNode.OwnerDocument;
+            XmlNode recordNode = document.CreateNode(XmlNodeType.Element, typeof(T).Name, null);
             foreach (var function in _saveActions)
             {
-                XmlNode? node = function(record);
+                XmlNode? node = function(record, document, defRecord);
 
                 if (node != null)
                     recordNode.AppendChild(node);

@@ -8,7 +8,7 @@ namespace Xtl.ManualTest.Entities
 {
     public class GenresTable : Table<Genre>
     {
-        public GenresTable()
+        public GenresTable(EntityBuilder<Genre> entityBuilder) : base(entityBuilder)
         {
         }
     }

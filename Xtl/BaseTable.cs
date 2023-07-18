@@ -10,6 +10,7 @@ namespace Xtl
     public abstract class BaseTable
     {
         public abstract void SaveTable(XmlDocument document);
-        
+        public abstract void LoadTable(XmlNode tableNode);
+        public abstract Type RecordType { get; }
     }
 }

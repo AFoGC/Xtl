@@ -1,4 +1,5 @@
 ﻿// See https://aka.ms/new-console-template for more information
+using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using Xtl;
@@ -17,29 +18,43 @@ Film film4 = new Film { Id = 4, GenreId = 1, Name = "Hui4", RealiseDate = 2015, 
 
 EntityBuilder<Film> builder = new EntityBuilder<Film>();
 XmlDocument document = new XmlDocument();
-builder.Document = document;
 
-XmlNode tableNode = document.CreateNode(XmlNodeType.Element, "ArrayOfFilm", null);
+XmlNode tableNode = document.CreateNode(XmlNodeType.Element, "Tables", null);
 document.AppendChild(tableNode);
 
-builder.Default = new Film();
+
 builder.AddSaveRule(x => x.Id);
 builder.AddSaveRule(x => x.GenreId);
 builder.AddSaveRule(x => x.Name);
 builder.AddSaveRule(x => x.RealiseDate);
 builder.AddSaveRule(x => x.WatchDate);
 
-builder.SaveNode(tableNode, film1);
-builder.SaveNode(tableNode, film2);
-builder.SaveNode(tableNode, film3);
-builder.SaveNode(tableNode, film4);
+Table<Film> films = new Table<Film>(builder);
+films.Default = new Film();
+//films.Records.Add(film1);
+//films.Records.Add(film2);
+//films.Records.Add(film3);
+//films.Records.Add(film4);
+//films.SaveTable(document);
+
+TablesCollection tablesCollection = new TablesCollection();
+tablesCollection.AddTable(films);
+
+tablesCollection.Load("outTables1.xml");
+tablesCollection.Save("outTables2.xml");
+
+tablesCollection.AddTabl<FilmsTable, Film>(x =>
+{
+    x.AddSaveRule(y => y.Id);
+});
 
 /*
 using (XmlWriter xmlWriter = XmlWriter.Create(Console.Out, new XmlWriterSettings { Indent = true }))
 {
-    //document.Save(xmlWriter);
+    document.Save(xmlWriter);
 }
-
+*/
+/*
 XmlSerializer serializer = new XmlSerializer(typeof(List<Film>));
 
 
@@ -66,5 +81,6 @@ using (XmlReader reader = XmlReader.Create("Out1.xml"))
     }
 }
 */
-
+/*
 Console.WriteLine(Helper.ToXmlValue(DateTime.Now));
+*/

@@ -8,7 +8,7 @@ namespace Xtl.ManualTest.Entities
 {
     public class FilmsTable : Table<Film>
     {
-        public FilmsTable()
+        public FilmsTable(EntityBuilder<Film> entityBuilder) : base(entityBuilder)
         {
         }
     }
