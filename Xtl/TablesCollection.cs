@@ -51,16 +51,18 @@ namespace Xtl
                 }
             }
         }
-
-        public void AddTable(BaseTable table)
+        
+        public void AddTable<T, R>(Action<TableBuilder<R>> buildAction) where T : Table<R>, new() where R : Record
         {
+            T table = new T();
+            buildAction(table.TableBuilder);
             _tables.Add(table);
         }
-        /*
-        public void AddTabl<T, R>(Action<EntityBuilder<R>> buildAction) where T : Table<R>, new() where R : Record
-        {
 
+        public T GetTable<T>() where T : BaseTable
+        {
+            Type tableType = typeof(T);
+            return (T)_tables.First(x => x.GetType() == tableType);
         }
-        */
     }
 }

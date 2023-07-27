@@ -8,8 +8,11 @@ namespace Xtl.ManualTest.Entities
 {
     public class FilmsTable : Table<Film>
     {
-        public FilmsTable(EntityBuilder<Film> entityBuilder) : base(entityBuilder)
+        public int MarksSystem { get; set; }
+
+        public FilmsTable()
         {
+            MarksSystem = 0;
         }
     }
 }

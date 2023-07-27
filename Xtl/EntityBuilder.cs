@@ -12,11 +12,13 @@ namespace Xtl
 {
     public class EntityBuilder<T> where T : Record
     {
-        private readonly List<Func<T, XmlDocument, T?, XmlNode?>> _saveActions = new List<Func<T, XmlDocument, T?, XmlNode?>>();
+        private readonly List<Func<T, XmlDocument, T?, XmlNode?>> _saveActions;
+        private readonly XmlSerializer _entitySerializer;
 
         public EntityBuilder()
         {
-            
+            _saveActions = new List<Func<T, XmlDocument, T?, XmlNode?>>();
+            _entitySerializer = new XmlSerializer(typeof(T));
         }
 
         public void AddSaveRule<D>(Expression<Func<T, D>> saveAction)
@@ -28,28 +30,21 @@ namespace Xtl
 
                 Func<T, D> func = saveAction.Compile();
 
-                bool isDefaultValue = false;
-
                 if (defRecord != null)
-                    if (func.Invoke(record).Equals(func.Invoke(defRecord)))
-                        isDefaultValue = true;
+                    if (Object.Equals(func.Invoke(record), func.Invoke(defRecord)))
+                        return null;
 
-                if (isDefaultValue == false)
-                {
-                    XmlNode node = document.CreateNode(XmlNodeType.Element, name, null);
-                    node.InnerXml = Helper.ToXmlValue(func.Invoke(record));
-                    return node;
-                }
-
-                return null;
+                XmlNode node = document.CreateNode(XmlNodeType.Element, name, null);
+                node.InnerXml = Helper.ToXmlValue(func.Invoke(record));
+                return node;
             };
 
             _saveActions.Add(action);
         }
 
-        public void SaveNode(XmlNode tableNode, T record, T? defRecord)
+        public void SaveNode(XmlNode recordsNode, T record, T? defRecord)
         {
-            XmlDocument document = tableNode.OwnerDocument;
+            XmlDocument document = recordsNode.OwnerDocument;
             XmlNode recordNode = document.CreateNode(XmlNodeType.Element, typeof(T).Name, null);
             foreach (var function in _saveActions)
             {
@@ -58,8 +53,15 @@ namespace Xtl
                 if (node != null)
                     recordNode.AppendChild(node);
             }
-            tableNode.AppendChild(recordNode);
+            recordsNode.AppendChild(recordNode);
         }
-            
+
+        public T LoadNode(XmlNode recordNode)
+        {
+            using (XmlReader reader = new XmlNodeReader(recordNode))
+            {
+                return (T)_entitySerializer.Deserialize(reader);
+            }
+        }
     }
 }

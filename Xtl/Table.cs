@@ -11,39 +11,32 @@ namespace Xtl
 {
     public class Table<T> : BaseTable where T : Record
     {
-        //private readonly TablesCollection _tablesCollection;
-        private readonly EntityBuilder<T> _entityBuilder;
         private readonly List<T> _records;
 
-        public Table(EntityBuilder<T> builder)
+        private readonly TableBuilder<T> _tableBuilder;
+
+        public Table()
         {
             _records = new List<T>();
-            //_tablesCollection = tablesCollection;
-            //_entityBuilder = new EntityBuilder<T>();
-            _entityBuilder = builder;
+            _tableBuilder = new TableBuilder<T>();
         }
 
-        //internal XmlDocument Document => _tablesCollection.XmlDocument;
+        internal TableBuilder<T> TableBuilder => _tableBuilder;
         public override Type RecordType => typeof(T);
         public ICollection<T> Records => _records;
-        public T? Default { get; set; }
+        public T? Default => _tableBuilder.Default;
 
+        
 
         public override void SaveTable(XmlDocument document)
         {
-            XmlNode node = document.CreateNode(XmlNodeType.Element, "Table", null);
+            XmlNode tableNode = document.CreateNode(XmlNodeType.Element, "Table", null);
             XmlAttribute attribute = document.CreateAttribute("type");
             attribute.InnerText = RecordType.Name;
-            node.Attributes.Append(attribute);
+            tableNode.Attributes.Append(attribute);
+            document.DocumentElement.AppendChild(tableNode);
 
-            XmlNode recordsList = document.CreateNode(XmlNodeType.Element, "Records", null);
-            document.DocumentElement.AppendChild(node);
-            node.AppendChild(recordsList);
-
-            foreach (T record in _records)
-            {
-                _entityBuilder.SaveNode(recordsList, record, Default);
-            }
+            _tableBuilder.SaveTable(this, tableNode);
         }
 
         public override void LoadTable(XmlNode tableNode)
@@ -51,12 +44,17 @@ namespace Xtl
             XmlSerializer serializer = new XmlSerializer(typeof(T));
 
             _records.Clear();
-            foreach (XmlNode node in tableNode["Records"].ChildNodes)
+            XmlNode? recordsNode = tableNode["Records"];
+
+            if (recordsNode != null)
             {
-                using (XmlReader reader = XmlReader.Create(new StringReader(node.OuterXml)))
+                foreach (XmlNode node in recordsNode.ChildNodes)
                 {
-                    T record = (T)serializer.Deserialize(reader);
-                    _records.Add(record);
+                    using (XmlReader reader = XmlReader.Create(new StringReader(node.OuterXml)))
+                    {
+                        T record = (T)serializer.Deserialize(reader);
+                        _records.Add(record);
+                    }
                 }
             }
         }
