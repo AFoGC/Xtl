@@ -13,20 +13,22 @@ namespace Xtl
     {
         private readonly List<T> _records;
 
-        private readonly TableBuilder<T> _tableBuilder;
+        private ITableBuilder<T> _tableBuilder;
 
         public Table()
         {
             _records = new List<T>();
-            _tableBuilder = new TableBuilder<T>();
         }
 
-        internal TableBuilder<T> TableBuilder => _tableBuilder;
+        internal ITableBuilder<T> TableBuilder => _tableBuilder;
         public override Type RecordType => typeof(T);
         public ICollection<T> Records => _records;
         public T? Default => _tableBuilder.Default;
 
-        
+        internal void SetBuilder(ITableBuilder<T> builder)
+        {
+            _tableBuilder = builder;
+        }
 
         public override void SaveTable(XmlDocument document)
         {
@@ -41,22 +43,8 @@ namespace Xtl
 
         public override void LoadTable(XmlNode tableNode)
         {
-            XmlSerializer serializer = new XmlSerializer(typeof(T));
-
             _records.Clear();
-            XmlNode? recordsNode = tableNode["Records"];
-
-            if (recordsNode != null)
-            {
-                foreach (XmlNode node in recordsNode.ChildNodes)
-                {
-                    using (XmlReader reader = XmlReader.Create(new StringReader(node.OuterXml)))
-                    {
-                        T record = (T)serializer.Deserialize(reader);
-                        _records.Add(record);
-                    }
-                }
-            }
+            _tableBuilder.LoadTable(this, tableNode);
         }
     }
 }

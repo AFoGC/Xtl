@@ -16,7 +16,7 @@ collection.AddTable<FilmsTable, Film>(x =>
 {
     x.Default = new Film() { Name = "Hui3" };
 
-    //x.AddSaveRule(x => x.)
+    x.AddSaveRule(x => x.MarksSystem, 0);
 
     x.EntityBuilder.AddSaveRule(x => x.Id);
     x.EntityBuilder.AddSaveRule(x => x.GenreId);
@@ -25,11 +25,14 @@ collection.AddTable<FilmsTable, Film>(x =>
     x.EntityBuilder.AddSaveRule(x => x.WatchDate);
 });
 
-FilmsTable filmsTable = collection.GetTable<FilmsTable>();
+//FilmsTable filmsTable = collection.GetTable<FilmsTable>();
 
-filmsTable.Records.Add(film1);
-filmsTable.Records.Add(film2);
-filmsTable.Records.Add(film3);
-filmsTable.Records.Add(film4);
+//filmsTable.MarksSystem = 6;
 
-collection.Save("Out3.xml");
+//filmsTable.Records.Add(film1);
+//filmsTable.Records.Add(film2);
+//filmsTable.Records.Add(film3);
+//filmsTable.Records.Add(film4);
+
+collection.Load("Out3.xml");
+collection.Save("Out4.xml");

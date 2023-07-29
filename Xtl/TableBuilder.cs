@@ -12,34 +12,34 @@ using System.Xml.Serialization;
 
 namespace Xtl
 {
-    public class TableBuilder<T> where T : Record
+    public class TableBuilder<TTable, TRecord> : ITableBuilder<TRecord> where TRecord : Record where TTable : Table<TRecord>
     {
-        private readonly List<Func<Table<T>, XmlDocument, XmlNode?>> _saveActions;
-        private readonly List<Action<Table<T>, XmlNode>> _loadActions;
+        private readonly List<Func<Table<TRecord>, XmlDocument, XmlNode?>> _saveActions;
+        private readonly List<Action<Table<TRecord>, XmlNode>> _loadActions;
 
-        public EntityBuilder<T> EntityBuilder { get; }
+        public EntityBuilder<TRecord> EntityBuilder { get; }
 
-        public T? Default { get; set; }
+        public TRecord? Default { get; set; }
 
         public TableBuilder()
         {
-            EntityBuilder = new EntityBuilder<T>();
+            EntityBuilder = new EntityBuilder<TRecord>();
 
-            _saveActions = new List<Func<Table<T>, XmlDocument, XmlNode?>>();
-            _loadActions = new List<Action<Table<T>, XmlNode>>();
+            _saveActions = new List<Func<Table<TRecord>, XmlDocument, XmlNode?>>();
+            _loadActions = new List<Action<Table<TRecord>, XmlNode>>();
         }
 
-        public void AddSaveRule<D>(Expression<Func<Table<T>, D>> saveAction, D defaultValue)
+        public void AddSaveRule<D>(Expression<Func<TTable, D>> saveAction, D defaultValue)
         {
             ArgumentNullException.ThrowIfNull(saveAction, nameof(saveAction));
             PropertyInfo property = Helper.GetPropertyInfo(null, saveAction);
 
-            Func<Table<T>, XmlDocument, XmlNode?> saveFunction = (Table<T> table, XmlDocument document) =>
+            Func<Table<TRecord>, XmlDocument, XmlNode?> saveFunction = (Table<TRecord> table, XmlDocument document) =>
             {
-                Func<Table<T>, D> func = saveAction.Compile();
-                D value = func(table);
+                Func<TTable, D> func = saveAction.Compile();
+                D value = func((TTable)table);
 
-                if (Object.Equals(defaultValue, value))
+                if (Object.Equals(defaultValue, value) == false)
                 {
                     XmlNode node = document.CreateNode(XmlNodeType.Element, property.Name, null);
                     node.InnerXml = Helper.ToXmlValue(value);
@@ -49,7 +49,7 @@ namespace Xtl
                 return null;
             };
 
-            Action<Table<T>, XmlNode> loadFunction = (Table<T> table, XmlNode node) =>
+            Action<Table<TRecord>, XmlNode> loadFunction = (Table<TRecord> table, XmlNode node) =>
             {
                 XmlElement? element = node[property.Name];
                 
@@ -69,33 +69,36 @@ namespace Xtl
             _loadActions.Add(loadFunction);
         }
 
-        public void LoadTable(Table<T> table, XmlNode tableNode)
+        public void LoadTable(Table<TRecord> table, XmlNode tableNode)
         {
+            table.Records.Clear();
+
             foreach (var loadAction in _loadActions)
             {
                 loadAction(table, tableNode);
             }
-
-            table.Records.Clear();
+            
             XmlNode? recordsNode = tableNode["Records"];
             if (recordsNode != null)
             {
                 foreach (XmlNode node in recordsNode.ChildNodes)
                 {
-                    T record = EntityBuilder.LoadNode(node);
+                    TRecord record = EntityBuilder.LoadNode(node);
                     table.Records.Add(record);
                 }
             }
         }
 
-        public void SaveTable(Table<T> table, XmlNode tableNode)
+        public void SaveTable(Table<TRecord> table, XmlNode tableNode)
         {
             XmlDocument document = tableNode.OwnerDocument;
 
             foreach (var saveFunction in _saveActions)
             {
                 XmlNode node = saveFunction(table, document);
-                tableNode.AppendChild(node);
+
+                if(node != null)
+                    tableNode.AppendChild(node);
             }
 
             XmlNode recordsNode = document.CreateElement("Records");

@@ -52,10 +52,12 @@ namespace Xtl
             }
         }
         
-        public void AddTable<T, R>(Action<TableBuilder<R>> buildAction) where T : Table<R>, new() where R : Record
+        public void AddTable<TTable, TRecord>(Action<TableBuilder<TTable, TRecord>> buildAction) where TTable : Table<TRecord>, new() where TRecord : Record
         {
-            T table = new T();
-            buildAction(table.TableBuilder);
+            TTable table = new TTable();
+            TableBuilder<TTable, TRecord> builder = new TableBuilder<TTable, TRecord>();
+            buildAction(builder);
+            table.SetBuilder(builder);
             _tables.Add(table);
         }
 
