@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.PortableExecutable;
@@ -9,21 +10,26 @@ using System.Xml.Serialization;
 
 namespace Xtl
 {
-    public class Table<T> : BaseTable where T : Record
+    public class Table<T> : BaseTable, ICollection<T> where T : Record, new()
     {
         private readonly List<T> _records;
 
         private ITableBuilder<T> _tableBuilder;
+        private int _counter;
 
         public Table()
         {
             _records = new List<T>();
+            _counter = 0;
         }
 
         internal ITableBuilder<T> TableBuilder => _tableBuilder;
         public override Type RecordType => typeof(T);
-        public ICollection<T> Records => _records;
-        public T? Default => _tableBuilder.Default;
+        public T? Default => _tableBuilder.DefaultRecord;
+        public int LastID => _counter;
+
+        public int Count => _records.Count;
+        public bool IsReadOnly => false;
 
         internal void SetBuilder(ITableBuilder<T> builder)
         {
@@ -32,19 +38,97 @@ namespace Xtl
 
         public override void SaveTable(XmlDocument document)
         {
-            XmlNode tableNode = document.CreateNode(XmlNodeType.Element, "Table", null);
-            XmlAttribute attribute = document.CreateAttribute("type");
-            attribute.InnerText = RecordType.Name;
-            tableNode.Attributes.Append(attribute);
-            document.DocumentElement.AppendChild(tableNode);
-
-            _tableBuilder.SaveTable(this, tableNode);
+            _tableBuilder.SaveTable(this, document);
         }
 
         public override void LoadTable(XmlNode tableNode)
         {
-            _records.Clear();
+            Clear();
             _tableBuilder.LoadTable(this, tableNode);
+        }
+
+        public T Add()
+        {
+            T item;
+            if (Default != null)
+                item = (T)Default.Clone();
+            else
+                item = new T();
+
+            Add(item);
+            return item;
+        }
+
+        public void Add(T item)
+        {
+            item.Id = ++_counter;
+            BaseAdd(item);
+
+            _tableBuilder.EntityBuilder.InvokeBinding(item);
+        }
+
+        internal void AddLoaded(T item)
+        {
+            BaseAdd(item);
+            _counter = item.Id;
+        }
+
+        private void BaseAdd(T item)
+        {
+            AddBinding(item);
+            _records.Add(item);
+        }
+
+        public void Clear()
+        {
+            foreach (var record in _records)
+                RemoveBindings(record);
+
+            _records.Clear();
+        }
+
+        public bool Contains(T item)
+        {
+            return _records.Contains(item);
+        }
+
+        public void CopyTo(T[] array, int arrayIndex)
+        {
+            _records.CopyTo(array, arrayIndex);
+        }
+
+        public bool Remove(T item)
+        {
+            RemoveBindings(item);
+            return _records.Remove(item);
+        }
+
+        private void AddBinding(T item)
+        {
+            _tableBuilder.EntityBuilder.AddBinding(item);
+        }
+
+        private void RemoveBindings(T item)
+        {
+            _tableBuilder.EntityBuilder.RemoveBinding(item);
+        }
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            return _records.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return _records.GetEnumerator();
+        }
+
+        internal override void InvokeBindings()
+        {
+            foreach (var record in _records)
+            {
+                _tableBuilder.EntityBuilder.InvokeBinding(record);
+            }
         }
     }
 }

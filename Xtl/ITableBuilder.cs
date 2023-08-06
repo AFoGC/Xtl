@@ -7,10 +7,11 @@ using System.Xml;
 
 namespace Xtl
 {
-    public interface ITableBuilder<TRecord> where TRecord : Record
+    public interface ITableBuilder<TRecord> where TRecord : Record, new()
     {
         public void LoadTable(Table<TRecord> table, XmlNode tableNode);
-        public void SaveTable(Table<TRecord> table, XmlNode tableNode);
-        public TRecord? Default { get; set; }
+        public void SaveTable(Table<TRecord> table, XmlDocument document);
+        public EntityBuilder<TRecord> EntityBuilder { get; }
+        public TRecord? DefaultRecord { get; set; }
     }
 }

@@ -12,21 +12,25 @@ using System.Xml.Serialization;
 
 namespace Xtl
 {
-    public class TableBuilder<TTable, TRecord> : ITableBuilder<TRecord> where TRecord : Record where TTable : Table<TRecord>
+    public class TableBuilder<TTable, TRecord> : ITableBuilder<TRecord> where TRecord : Record, new() where TTable : Table<TRecord>
     {
+
         private readonly List<Func<Table<TRecord>, XmlDocument, XmlNode?>> _saveActions;
         private readonly List<Action<Table<TRecord>, XmlNode>> _loadActions;
+        private readonly List<Action<Table<TRecord>>> _setToDefaultActions;
 
         public EntityBuilder<TRecord> EntityBuilder { get; }
 
-        public TRecord? Default { get; set; }
+        public TRecord? DefaultRecord { get; set; }
+        public TTable? DefaultTable { get; set; }
 
-        public TableBuilder()
+        public TableBuilder(TablesCollection tablesCollection)
         {
-            EntityBuilder = new EntityBuilder<TRecord>();
+            EntityBuilder = new EntityBuilder<TRecord>(tablesCollection);
 
             _saveActions = new List<Func<Table<TRecord>, XmlDocument, XmlNode?>>();
             _loadActions = new List<Action<Table<TRecord>, XmlNode>>();
+            _setToDefaultActions = new List<Action<Table<TRecord>>>();
         }
 
         public void AddSaveRule<D>(Expression<Func<TTable, D>> saveAction, D defaultValue)
@@ -65,33 +69,55 @@ namespace Xtl
                 }
             };
 
+            Action<Table<TRecord>> setToDefaultFunction = (Table<TRecord> table) =>
+            {
+                object value = property.GetValue(DefaultTable);
+                property.SetValue(table, value);
+            };
+
             _saveActions.Add(saveFunction);
             _loadActions.Add(loadFunction);
+            _setToDefaultActions.Add(setToDefaultFunction);
         }
 
         public void LoadTable(Table<TRecord> table, XmlNode tableNode)
         {
-            table.Records.Clear();
+            table.Clear();
+
+            foreach (var setToDefault in _setToDefaultActions)
+                setToDefault(table);
 
             foreach (var loadAction in _loadActions)
-            {
                 loadAction(table, tableNode);
-            }
             
             XmlNode? recordsNode = tableNode["Records"];
             if (recordsNode != null)
             {
                 foreach (XmlNode node in recordsNode.ChildNodes)
                 {
-                    TRecord record = EntityBuilder.LoadNode(node);
-                    table.Records.Add(record);
+                    TRecord record;
+                    if (table.Default != null)
+                    {
+                        record = (TRecord)table.Default.Clone();
+                    }
+                    else
+                    {
+                        record = new TRecord();
+                    }
+                    
+                    EntityBuilder.LoadNode(record, node);
+                    table.AddLoaded(record);
                 }
             }
         }
 
-        public void SaveTable(Table<TRecord> table, XmlNode tableNode)
+        public void SaveTable(Table<TRecord> table, XmlDocument document)
         {
-            XmlDocument document = tableNode.OwnerDocument;
+            XmlNode tableNode = document.CreateNode(XmlNodeType.Element, "Table", null);
+            XmlAttribute attribute = document.CreateAttribute("type");
+            attribute.InnerText = table.RecordType.Name;
+            tableNode.Attributes.Append(attribute);
+            document.DocumentElement.AppendChild(tableNode);
 
             foreach (var saveFunction in _saveActions)
             {
@@ -104,7 +130,7 @@ namespace Xtl
             XmlNode recordsNode = document.CreateElement("Records");
             tableNode.AppendChild(recordsNode);
 
-            foreach (var record in table.Records)
+            foreach (var record in table)
             {
                 EntityBuilder.SaveNode(recordsNode, record, table.Default);
             }

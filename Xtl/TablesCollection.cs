@@ -50,12 +50,17 @@ namespace Xtl
                     }
                 }
             }
+
+            foreach(var table in _tables)
+            {
+                table.InvokeBindings();
+            }
         }
         
-        public void AddTable<TTable, TRecord>(Action<TableBuilder<TTable, TRecord>> buildAction) where TTable : Table<TRecord>, new() where TRecord : Record
+        public void AddTable<TTable, TRecord>(Action<TableBuilder<TTable, TRecord>> buildAction) where TTable : Table<TRecord>, new() where TRecord : Record, new()
         {
             TTable table = new TTable();
-            TableBuilder<TTable, TRecord> builder = new TableBuilder<TTable, TRecord>();
+            TableBuilder<TTable, TRecord> builder = new TableBuilder<TTable, TRecord>(this);
             buildAction(builder);
             table.SetBuilder(builder);
             _tables.Add(table);
@@ -65,6 +70,12 @@ namespace Xtl
         {
             Type tableType = typeof(T);
             return (T)_tables.First(x => x.GetType() == tableType);
+        }
+
+        public Table<T> GetTableByRecord<T>() where T : Record, new()
+        {
+            Type recordType = typeof(T);
+            return (Table<T>)_tables.First(x => x.RecordType == recordType);
         }
     }
 }

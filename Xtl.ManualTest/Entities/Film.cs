@@ -8,10 +8,49 @@ namespace Xtl.ManualTest.Entities
 {
     public class Film : Record
     {
-        public int Id { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public DateTime? WatchDate { get; set; }
-        public int RealiseDate { get; set; }
-        public int GenreId { get; set; }
+        private string _name = string.Empty;
+        private DateTime? _watchDate;
+        private int _realiseDate;
+        private int _genreId;
+
+        private Genre _genre = null;
+
+        public string Name
+        { 
+            get => _name; 
+            set { _name = value; OnPropertyChanged(); }
+        } 
+        public DateTime? WatchDate
+        {
+            get => _watchDate;
+            set { _watchDate = value; OnPropertyChanged(); }
+        }
+        public int RealiseDate
+        {
+            get => _realiseDate;
+            set { _realiseDate = value; OnPropertyChanged(); }
+        }
+        public int GenreId
+        {
+            get => _genreId; 
+            set { _genreId = value; OnPropertyChanged(); }
+        }
+
+        public Genre Genre 
+        { 
+            get => _genre; 
+            private set { _genre = value; OnPropertyChanged(); } 
+        }
+
+        public override object Clone()
+        {
+            return new Film 
+            { 
+                Name = Name, 
+                GenreId = GenreId, 
+                RealiseDate = RealiseDate, 
+                WatchDate = WatchDate 
+            };
+        }
     }
 }

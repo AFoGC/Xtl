@@ -67,5 +67,15 @@ namespace Xtl
             }
         }
         
+        public static object FromXml(string fieldName, Type fieldType, XmlNode xmlNode)
+        {
+            XmlRootAttribute rootAttribute = new XmlRootAttribute(fieldName);
+            XmlSerializer serializer = new XmlSerializer(fieldType, rootAttribute);
+
+            using (var writer = new XmlNodeReader(xmlNode))
+            {
+                return serializer.Deserialize(writer);
+            }
+        }
     }
 }
