@@ -27,7 +27,7 @@ collection.AddTable<FilmsTable, Film>(x =>
     x.EntityBuilder.AddSaveRule(x => x.RealiseDate);
     x.EntityBuilder.AddSaveRule(x => x.WatchDate);
 
-    x.EntityBuilder.AddBinding(y => y.GenreId, y => y.Genre);
+    x.EntityBuilder.HasOne(y => y.GenreId, y => y.Genre);
 });
 
 collection.AddTable<GenresTable, Genre>(x =>

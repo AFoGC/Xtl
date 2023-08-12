@@ -70,7 +70,7 @@ namespace Xtl
         }
 
         
-        public void AddBinding<TValue>(Expression<Func<TRecord, int>> getIdExpression, Expression<Func<TRecord, TValue>> bindExpression) where TValue : Record, new()
+        public void HasOne<TValue>(Expression<Func<TRecord, int>> getIdExpression, Expression<Func<TRecord, TValue>> bindExpression) where TValue : Record, new()
         {
             PropertyInfo idProperty = Helper.GetPropertyInfo(null, getIdExpression);
             PropertyInfo bindProperty = Helper.GetPropertyInfo(null, bindExpression);
