@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection.PortableExecutable;
 using System.Text;
@@ -10,17 +13,26 @@ using System.Xml.Serialization;
 
 namespace Xtl
 {
-    public class Table<T> : BaseTable, ICollection<T> where T : Record, new()
+    public class Table<T> : BaseTable, ICollection<T>, INotifyCollectionChanged where T : Record, new()
     {
-        private readonly List<T> _records;
+        private readonly ObservableCollection<T> _records;
 
         private ITableBuilder<T> _tableBuilder;
         private int _counter;
 
         public Table()
         {
-            _records = new List<T>();
+            _records = new ObservableCollection<T>();
+            _records.CollectionChanged += RecordsCollectionChanged;
             _counter = 0;
+        }
+
+        public event NotifyCollectionChangedEventHandler? CollectionChanged;
+        public event PropertyChangedEventHandler? RecordsPropertyChanged;
+
+        private void RecordsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            CollectionChanged?.Invoke(this, e);
         }
 
         internal ITableBuilder<T> TableBuilder => _tableBuilder;

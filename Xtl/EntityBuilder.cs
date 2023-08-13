@@ -119,6 +119,14 @@ namespace Xtl
             _invokeBindingActions.Add(invokeBinding);
         }
 
+        public void HasMany<TValue>(Expression<Func<TValue, TRecord>> getIdExpression, Expression<Func<TRecord, RecordsCollection<TValue>>> bindExpression) where TValue : Record, new()
+        {
+            Action<TRecord> action = (TRecord record) =>
+            {
+
+            };
+        }
+
         internal void SaveNode(XmlNode recordsNode, TRecord record, TRecord? defRecord)
         {
             XmlDocument document = recordsNode.OwnerDocument;

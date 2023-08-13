@@ -14,15 +14,13 @@ namespace Xtl
     public class RecordsCollection<T> : ICollection<T>, INotifyCollectionChanged where T : Record, new()
     {
         private readonly ObservableCollection<T> _records;
-        private readonly Record _record;
 
-        private PropertyInfo _idPropertyInfo;
+        private PropertyInfo _collectionProperty;
 
         public event NotifyCollectionChangedEventHandler? CollectionChanged;
 
-        public RecordsCollection(Record record)
+        public RecordsCollection()
         {
-            _record = record;
             _records = new ObservableCollection<T>();
         }
 
@@ -31,42 +29,44 @@ namespace Xtl
 
         internal void SetProperty(PropertyInfo property)
         {
-            _idPropertyInfo = property;
-        }
-
-        public void Add(T item)
-        {
-            item.PropertyChanged += OnItemPropertyChanged;
-            _idPropertyInfo.SetValue(item, _record.Id);
+            _collectionProperty = property;
         }
 
         private void OnItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            /*
             T item = (T)sender;
 
-            if (e.PropertyName == _idPropertyInfo.Name)
-            {
-                int id = (int)_idPropertyInfo.GetValue(item);
-                if(id == _record.Id)
-                {
-                    _records.Add(item);
-                }
-                else
-                {
-                    _records.Remove(item);
-                }
+            if ()
+            { 
+
             }
-            */
+        }
+
+        public void Add(T item)
+        {
+            _records.Add(item);
+            item.PropertyChanged += OnItemPropertyChanged;
+            
         }
 
         public bool Remove(T item)
         {
-            return _records.Remove(item);
+            if (_records.Remove(item))
+            {
+                item.PropertyChanged -= OnItemPropertyChanged;
+                return true;
+            }
+
+            return false;
         }
 
         public void Clear()
         {
+            foreach (T item in _records)
+            {
+                item.PropertyChanged -= OnItemPropertyChanged;
+            }
+
             _records.Clear();
         }
 
