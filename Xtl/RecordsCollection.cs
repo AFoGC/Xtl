@@ -36,9 +36,9 @@ namespace Xtl
         {
             T item = (T)sender;
 
-            if (e.PropertyName)
+            if (e.PropertyName == _collectionProperty.Name)
             { 
-
+                //Добавить логику при изменении свойста за которое отвечает коллекция
             }
         }
 
