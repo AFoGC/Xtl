@@ -36,7 +36,7 @@ namespace Xtl
         {
             T item = (T)sender;
 
-            if ()
+            if (e.PropertyName)
             { 
 
             }
