@@ -27,7 +27,7 @@ namespace Xtl
         public int Count => _records.Count;
         public bool IsReadOnly => false;
 
-        internal void SetProperty(PropertyInfo property)
+        internal void SetForeignIdProperty(PropertyInfo property)
         {
             _collectionProperty = property;
         }
@@ -37,9 +37,21 @@ namespace Xtl
             T item = (T)sender;
 
             if (e.PropertyName == _collectionProperty.Name)
-            { 
-                //Добавить логику при изменении свойста за которое отвечает коллекция
+            {
+                Remove(item);
             }
+            
+
+            /*
+            if (e.PropertyName == _collectionProperty.Name)
+            {
+                int keyId = (int)_collectionProperty.GetValue(item);
+                if (_parentId != keyId)
+                {
+                    Remove(item);
+                }
+            }
+            */
         }
 
         public void Add(T item)

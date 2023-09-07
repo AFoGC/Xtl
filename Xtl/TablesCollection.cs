@@ -66,6 +66,12 @@ namespace Xtl
             _tables.Add(table);
         }
 
+        public void Configure(Action<TablesCollectionBuilder> buildAction)
+        {
+            TablesCollectionBuilder builder = new TablesCollectionBuilder(this);
+            buildAction(builder);
+        }
+
         public T GetTable<T>() where T : BaseTable
         {
             Type tableType = typeof(T);
