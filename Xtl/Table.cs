@@ -117,11 +117,13 @@ namespace Xtl
 
         private void AddBinding(T item)
         {
+            item.PropertyChanged += RecordsPropertyChanged;
             _tableBuilder.EntityBuilder.AddBinding(item);
         }
 
         private void RemoveBindings(T item)
         {
+            item.PropertyChanged -= RecordsPropertyChanged;
             _tableBuilder.EntityBuilder.RemoveBinding(item);
         }
 

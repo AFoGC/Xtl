@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Linq.Expressions;
@@ -12,7 +13,7 @@ using System.Xml.Serialization;
 
 namespace Xtl
 {
-    public class EntityBuilder<TRecord> where TRecord : Record
+    public class EntityBuilder<TRecord> where TRecord : Record, new()
     {
         private readonly TablesCollection _tablesCollection;
         private readonly List<Func<TRecord, XmlDocument, TRecord?, XmlNode?>> _saveActions;
@@ -20,6 +21,7 @@ namespace Xtl
         private readonly List<Action<TRecord>> _bindActions;
         private readonly List<Action<TRecord>> _unbindActions;
         private readonly List<Action<TRecord>> _invokeBindingActions;
+        private readonly List<Action<TRecord>> _invokeManyBinding;
 
         public EntityBuilder(TablesCollection tablesCollection)
         {
@@ -29,6 +31,7 @@ namespace Xtl
             _bindActions = new List<Action<TRecord>>();
             _unbindActions = new List<Action<TRecord>>();
             _invokeBindingActions = new List<Action<TRecord>>();
+            _invokeManyBinding = new List<Action<TRecord>>();
 
             AddSaveRule(x => x.Id);
         }
@@ -119,12 +122,68 @@ namespace Xtl
             _invokeBindingActions.Add(invokeBinding);
         }
 
-        public void HasMany<TValue>(Expression<Func<TValue, TRecord>> getIdExpression, Expression<Func<TRecord, RecordsCollection<TValue>>> bindExpression) where TValue : Record, new()
+        public void HasMany<TValue>(Expression<Func<TValue, int>> getIdExpression, Expression<Func<TValue, TRecord>> hasOneExpression, Expression<Func<TRecord, RecordsCollection<TValue>>> hasManyExpression) where TValue : Record, new()
         {
-            Action<TRecord> action = (TRecord record) =>
-            {
+            Table<TValue> valuesTable = _tablesCollection.GetTableByRecord<TValue>();
+            Table<TRecord> recordsTable = _tablesCollection.GetTableByRecord<TRecord>();
 
+            PropertyInfo hasOneProperty = Helper.GetPropertyInfo(null, hasOneExpression);
+
+            Func<TValue, TRecord> hasOneFunc = hasOneExpression.Compile();
+            Func<TRecord, RecordsCollection<TValue>> hasManyFunc = hasManyExpression.Compile();
+
+            Action<TRecord> invokeBinding = (TRecord record) =>
+            {
+                RecordsCollection<TValue> values = hasManyFunc(record);
+                values.SetForeignIdProperty(hasOneProperty);
             };
+
+            _invokeManyBinding.Add(invokeBinding);
+
+            PropertyChangedEventHandler valuesPropertyChanged = new PropertyChangedEventHandler((s, e) =>
+            {
+                TValue value = (TValue)s;
+
+                if (hasOneProperty.Name == e.PropertyName)
+                {
+                    TRecord record = hasOneFunc(value);
+
+                    if(record != null)
+                    {
+                        RecordsCollection<TValue> values = hasManyFunc(record);
+                        values.Add(value);
+                    }
+                }
+            });
+
+            valuesTable.RecordsPropertyChanged += valuesPropertyChanged;
+
+            /*
+            PropertyChangedEventHandler valuePropertyChanged = new PropertyChangedEventHandler((s, e) =>
+            {
+                TRecord record = (TRecord)s;
+
+                if(idProperty.Name == e.PropertyName)
+                {
+
+                }
+            });
+
+            NotifyCollectionChangedEventHandler tablesChanged = new NotifyCollectionChangedEventHandler((s, e) =>
+            {
+                switch (e.Action)
+                {
+                    case NotifyCollectionChangedAction.Add:
+                        break;
+                    case NotifyCollectionChangedAction.Remove:
+                        break;
+                    case NotifyCollectionChangedAction.Reset:
+                        break;
+                }
+            });
+
+            values.CollectionChanged += tablesChanged;
+            */
         }
 
         internal void SaveNode(XmlNode recordsNode, TRecord record, TRecord? defRecord)
@@ -161,7 +220,10 @@ namespace Xtl
 
         internal void InvokeBinding(TRecord record)
         {
-            foreach(var action in _invokeBindingActions)
+            foreach (var action in _invokeManyBinding)
+                action(record);
+
+            foreach (var action in _invokeBindingActions)
                 action(record);
         }
     }

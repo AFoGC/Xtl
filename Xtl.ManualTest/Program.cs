@@ -3,9 +3,10 @@ using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using Xtl;
+using Xtl.ManualTest;
 using Xtl.ManualTest.Entities;
 
-
+/*
 Film film1 = new Film { GenreId = 0, Name = "Hui1", RealiseDate = 2001 };
 Film film2 = new Film { GenreId = 0, Name = "Hui2", RealiseDate = 2022 };
 Film film3 = new Film { GenreId = 0, Name = "Hui3", RealiseDate = 2013 };
@@ -39,6 +40,9 @@ collection.AddTable<GenresTable, Genre>(x =>
     x.EntityBuilder.AddSaveRule(x => x.IsSerial);
 });
 
+TablesCollectionBuilder builder = new TablesCollectionBuilder(collection);
+builder.AddOneToMany<Genre, Film>(x => x.GenreId, x => x.Genre, x => x.Films);
+*/
 /*
 FilmsTable filmsTable = collection.GetTable<FilmsTable>();
 GenresTable genresTable = collection.GetTable<GenresTable>();
@@ -63,13 +67,42 @@ Console.WriteLine(film2.Genre.Name);
 Console.WriteLine(film3.Genre.Name);
 Console.WriteLine(film4.Genre.Name);
 */
+TablesCollection collection = new TablesCollection();
 
+collection.Configure(builder =>
+{
+    builder.AddTable<FilmsTable, Film>(x =>
+    {
+        x.DefaultTable = new FilmsTable();
+        x.DefaultRecord = new Film() { Name = "Hui3" };
+
+        x.AddSaveRule(x => x.MarksSystem, 0);
+
+        x.EntityBuilder.AddSaveRule(x => x.GenreId);
+        x.EntityBuilder.AddSaveRule(x => x.Name);
+        x.EntityBuilder.AddSaveRule(x => x.RealiseDate);
+        x.EntityBuilder.AddSaveRule(x => x.WatchDate);
+
+        x.EntityBuilder.HasOne(y => y.GenreId, y => y.Genre);
+    });
+
+    builder.AddTable<GenresTable, Genre>(x =>
+    {
+        x.DefaultTable = new GenresTable();
+        x.DefaultRecord = new Genre();
+
+        x.EntityBuilder.AddSaveRule(x => x.Name);
+        x.EntityBuilder.AddSaveRule(x => x.IsSerial);
+    });
+
+    builder.AddOneToMany<Genre, Film>(x => x.GenreId, x => x.Genre, x => x.Films);
+});
 
 collection.Load("Out3.xml");
 foreach (var item in collection.GetTable<FilmsTable>())
 {
     Console.WriteLine(item.Genre.Name);
 }
-
+TablesConsole.WriteTabes(collection);
 //collection.GetTable<FilmsTable>().Add(new Film { Name = "Zalupa"});
-collection.Save("Out4.xml");
+//collection.Save("Out4.xml");

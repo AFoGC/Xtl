@@ -11,6 +11,13 @@ namespace Xtl.ManualTest.Entities
         public string Name { get; set; } = string.Empty;
         public bool IsSerial { get; set; }
 
+        public RecordsCollection<Film> Films { get; }
+
+        public Genre()
+        {
+            Films = new RecordsCollection<Film>();
+        }
+
         public override object Clone()
         {
             return new Genre
