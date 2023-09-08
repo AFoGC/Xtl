@@ -1,6 +1,7 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using System.Text;
 using System.Xml;
+using System.Xml.Linq;
 using System.Xml.Serialization;
 using Xtl;
 using Xtl.ManualTest;
@@ -99,10 +100,24 @@ collection.Configure(builder =>
 });
 
 collection.Load("Out3.xml");
-foreach (var item in collection.GetTable<FilmsTable>())
-{
-    Console.WriteLine(item.Genre.Name);
-}
+
+Table<Film> films = collection.GetTableByRecord<Film>();
+Table<Genre> genres = collection.GetTableByRecord<Genre>();
+
+Film film1 = films.First(x => x.Id == 1); //Film
+Film film2 = films.First(x => x.Id == 2); //Serial
+Film film3 = films.First(x => x.Id == 3); //Serial
+Film film4 = films.First(x => x.Id == 4); //Film
+
+Genre filmGenre = genres.First(x => x.Id == 1);
+Genre serialGenre = genres.First(x => x.Id == 2);
+
 TablesConsole.WriteTabes(collection);
+
+
+serialGenre.Films.Remove(film2);
+serialGenre.Films.Add(film2);
+TablesConsole.WriteTabes(collection);
+
 //collection.GetTable<FilmsTable>().Add(new Film { Name = "Zalupa"});
 //collection.Save("Out4.xml");

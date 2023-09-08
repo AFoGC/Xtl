@@ -51,9 +51,14 @@ namespace Xtl
                 }
             }
 
-            foreach(var table in _tables)
+            foreach (var table in _tables)
             {
                 table.InvokeBindings();
+            }
+
+            foreach (var table in _tables)
+            {
+                table.AddAllBindings();
             }
         }
         

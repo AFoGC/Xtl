@@ -81,7 +81,7 @@ namespace Xtl
 
         internal void AddLoaded(T item)
         {
-            BaseAdd(item);
+            _records.Add(item);
             _counter = item.Id;
         }
 
@@ -113,6 +113,12 @@ namespace Xtl
         {
             RemoveBindings(item);
             return _records.Remove(item);
+        }
+
+        internal override void AddAllBindings()
+        {
+            foreach (var item in this)
+                AddBinding(item);
         }
 
         private void AddBinding(T item)
