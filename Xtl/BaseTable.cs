@@ -10,6 +10,7 @@ namespace Xtl
     public abstract class BaseTable
     {
         internal abstract void InvokeBindings();
+        internal abstract void AddAllBindings();
         public abstract void SaveTable(XmlDocument document);
         public abstract void LoadTable(XmlNode tableNode);
         public abstract Type RecordType { get; }

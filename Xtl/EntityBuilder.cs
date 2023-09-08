@@ -73,12 +73,12 @@ namespace Xtl
         }
 
         
-        public void HasOne<TValue>(Expression<Func<TRecord, int>> getIdExpression, Expression<Func<TRecord, TValue>> bindExpression) where TValue : Record, new()
+        public void HasOne<TValue>(Expression<Func<TRecord, int>> getIdExpression, Expression<Func<TRecord, TValue>> hasOneExpression) where TValue : Record, new()
         {
             PropertyInfo idProperty = Helper.GetPropertyInfo(null, getIdExpression);
-            PropertyInfo bindProperty = Helper.GetPropertyInfo(null, bindExpression);
+            PropertyInfo hasOneProperty = Helper.GetPropertyInfo(null, hasOneExpression);
 
-            Func<TRecord, int> func = getIdExpression.Compile();
+            Func<TRecord, int> getIdFunc = getIdExpression.Compile();
 
             PropertyChangedEventHandler propertyChangedEventHandler = new PropertyChangedEventHandler((s, e) =>
             {
@@ -86,11 +86,15 @@ namespace Xtl
                 {
                     TRecord record = (TRecord)s;
                     Table<TValue> table = _tablesCollection.GetTableByRecord<TValue>();
-                    int id = func(record);
+                    int id = getIdFunc(record);
                     if (id != 0)
                     {
                         TValue value = table.First(x => x.Id == id);
-                        bindProperty.SetValue(record, value);
+                        hasOneProperty.SetValue(record, value);
+                    }
+                    else
+                    {
+                        hasOneProperty.SetValue(record, null);
                     }
                 }
             });
@@ -98,12 +102,16 @@ namespace Xtl
             Action<TRecord> invokeBinding = (TRecord record) =>
             {
                 Table<TValue> table = _tablesCollection.GetTableByRecord<TValue>();
-                int id = func(record);
+                int id = getIdFunc(record);
 
                 if (id != 0)
                 {
                     TValue value = table.First(x => x.Id == id);
-                    bindProperty.SetValue(record, value);
+                    hasOneProperty.SetValue(record, value);
+                }
+                else
+                {
+                    hasOneProperty.SetValue(record, null);
                 }
             };
 
@@ -122,20 +130,27 @@ namespace Xtl
             _invokeBindingActions.Add(invokeBinding);
         }
 
-        public void HasMany<TValue>(Expression<Func<TValue, int>> getIdExpression, Expression<Func<TValue, TRecord>> hasOneExpression, Expression<Func<TRecord, RecordsCollection<TValue>>> hasManyExpression) where TValue : Record, new()
+        public void HasMany<TValue>(Expression<Func<TValue, int>> getForeignKeyExpression, Expression<Func<TValue, TRecord>> hasOneExpression, Expression<Func<TRecord, RecordsCollection<TValue>>> hasManyExpression) where TValue : Record, new()
         {
             Table<TValue> valuesTable = _tablesCollection.GetTableByRecord<TValue>();
             Table<TRecord> recordsTable = _tablesCollection.GetTableByRecord<TRecord>();
 
             PropertyInfo hasOneProperty = Helper.GetPropertyInfo(null, hasOneExpression);
+            PropertyInfo foreignKeyProperty = Helper.GetPropertyInfo(null, getForeignKeyExpression);
 
             Func<TValue, TRecord> hasOneFunc = hasOneExpression.Compile();
             Func<TRecord, RecordsCollection<TValue>> hasManyFunc = hasManyExpression.Compile();
+            Func<TValue, int> getIdFunc = getForeignKeyExpression.Compile();
 
             Action<TRecord> invokeBinding = (TRecord record) =>
             {
-                RecordsCollection<TValue> values = hasManyFunc(record);
-                values.SetForeignIdProperty(hasOneProperty);
+                RecordsCollection<TValue> valuesCollection = hasManyFunc(record);
+                valuesCollection.SetHasOneProperty(hasOneProperty, foreignKeyProperty, record.Id);
+
+                var values = valuesTable.Where(x => getIdFunc(x) == record.Id);
+
+                foreach(var item in values)
+                    valuesCollection.InternalAdd(item);
             };
 
             _invokeManyBinding.Add(invokeBinding);
@@ -151,39 +166,12 @@ namespace Xtl
                     if(record != null)
                     {
                         RecordsCollection<TValue> values = hasManyFunc(record);
-                        values.Add(value);
+                        values.InternalAdd(value);
                     }
                 }
             });
 
             valuesTable.RecordsPropertyChanged += valuesPropertyChanged;
-
-            /*
-            PropertyChangedEventHandler valuePropertyChanged = new PropertyChangedEventHandler((s, e) =>
-            {
-                TRecord record = (TRecord)s;
-
-                if(idProperty.Name == e.PropertyName)
-                {
-
-                }
-            });
-
-            NotifyCollectionChangedEventHandler tablesChanged = new NotifyCollectionChangedEventHandler((s, e) =>
-            {
-                switch (e.Action)
-                {
-                    case NotifyCollectionChangedAction.Add:
-                        break;
-                    case NotifyCollectionChangedAction.Remove:
-                        break;
-                    case NotifyCollectionChangedAction.Reset:
-                        break;
-                }
-            });
-
-            values.CollectionChanged += tablesChanged;
-            */
         }
 
         internal void SaveNode(XmlNode recordsNode, TRecord record, TRecord? defRecord)
