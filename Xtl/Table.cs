@@ -59,6 +59,11 @@ namespace Xtl
             _tableBuilder.LoadTable(this, tableNode);
         }
 
+        void ICollection<T>.Add(T item)
+        {
+            Add(item);
+        }
+
         public T Add()
         {
             T item;
@@ -67,16 +72,16 @@ namespace Xtl
             else
                 item = new T();
 
-            Add(item);
-            return item;
+            return Add(item);
         }
 
-        public void Add(T item)
+        public T Add(T item)
         {
             item.Id = ++_counter;
             BaseAdd(item);
 
             _tableBuilder.EntityBuilder.InvokeBinding(item);
+            return item;
         }
 
         internal void AddLoaded(T item)
