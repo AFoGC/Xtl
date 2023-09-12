@@ -38,5 +38,10 @@ namespace Xtl
             Table<TMany> manies = _tablesCollection.GetTableByRecord<TMany>();
             manies.TableBuilder.EntityBuilder.HasMany(getIdExpression, hasOne, hasMany);
         }
+
+        public void AddOneToOne<TMain, TSub>(Expression<Func<TMain, TSub>> hasOne)
+        {
+
+        }
     }
 }
