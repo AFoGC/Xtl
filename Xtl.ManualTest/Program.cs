@@ -43,6 +43,9 @@ TablesConsole.WriteTabes(collection);
 Table<Film> films = collection.GetTableByRecord<Film>();
 Table<Genre> genres = collection.GetTableByRecord<Genre>();
 
+films.Remove(films.First());
+TablesConsole.WriteTabes(collection);
+/*
 films.RecordsPropertyChanged += Films_RecordsPropertyChanged;
 
 films.First().GenreId = 0;
