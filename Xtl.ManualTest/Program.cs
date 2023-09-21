@@ -15,12 +15,13 @@ collection.Configure(builder =>
         x.DefaultTable = new FilmsTable();
         x.DefaultRecord = new Film() { Name = "Hui3" };
 
-        x.AddSaveRule(x => x.MarksSystem, 0);
+        x.AddTableSaveRule(x => x.MarksSystem, 0);
 
-        x.EntityBuilder.AddSaveRule(x => x.GenreId);
-        x.EntityBuilder.AddSaveRule(x => x.Name);
-        x.EntityBuilder.AddSaveRule(x => x.RealiseDate);
-        x.EntityBuilder.AddSaveRule(x => x.WatchDate);
+        x.SetEntityId(x => x.Id);
+        x.AddEntitySaveRule(x => x.GenreId);
+        x.AddEntitySaveRule(x => x.Name);
+        x.AddEntitySaveRule(x => x.RealiseDate);
+        x.AddEntitySaveRule(x => x.WatchDate);
     });
 
     builder.AddTable<GenresTable, Genre>(x =>
@@ -28,8 +29,9 @@ collection.Configure(builder =>
         x.DefaultTable = new GenresTable();
         x.DefaultRecord = new Genre();
 
-        x.EntityBuilder.AddSaveRule(x => x.Name);
-        x.EntityBuilder.AddSaveRule(x => x.IsSerial);
+        x.SetEntityId(x => x.Id);
+        x.AddEntitySaveRule(x => x.Name);
+        x.AddEntitySaveRule(x => x.IsSerial);
     });
 
     builder.AddOneToMany<Genre, Film>(x => x.GenreId, x => x.Genre, x => x.Films);
@@ -37,10 +39,22 @@ collection.Configure(builder =>
 
 collection.Load("Out3.xml");
 TablesConsole.WriteTabes(collection);
-/*
+
 Table<Film> films = collection.GetTableByRecord<Film>();
 Table<Genre> genres = collection.GetTableByRecord<Genre>();
 
+films.RecordsPropertyChanged += Films_RecordsPropertyChanged;
+
+films.First().GenreId = 0;
+
+void Films_RecordsPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+{
+    Film film = (Film)sender;
+    Console.WriteLine($"{film.Name}, Property Changed: {e.PropertyName}");
+}
+
+TablesConsole.WriteTabes(collection);
+/*
 Film film1 = films.Add(new Film { Name = "film1" });
 Film film2 = films.Add(new Film { Name = "film2" });
 Film film3 = films.Add(new Film { Name = "film3" });

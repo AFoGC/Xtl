@@ -23,16 +23,21 @@ namespace Xtl
         public Table()
         {
             _records = new ObservableCollection<T>();
-            _records.CollectionChanged += RecordsCollectionChanged;
+            _records.CollectionChanged += OnRecordsCollectionChanged;
             _counter = 0;
         }
 
         public event NotifyCollectionChangedEventHandler? CollectionChanged;
         public event PropertyChangedEventHandler? RecordsPropertyChanged;
 
-        private void RecordsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        private void OnRecordsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
             CollectionChanged?.Invoke(this, e);
+        }
+
+        private void OnRecordsPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            RecordsPropertyChanged?.Invoke(sender, e);
         }
 
         internal ITableBuilder<T> TableBuilder => _tableBuilder;
@@ -77,7 +82,9 @@ namespace Xtl
 
         public T Add(T item)
         {
-            item.Id = ++_counter;
+            int id = ++_counter;
+            _tableBuilder.EntityBuilder.IdRule.SetId(item, id);
+
             BaseAdd(item);
 
             _tableBuilder.EntityBuilder.InvokeBinding(item);
@@ -87,7 +94,7 @@ namespace Xtl
         internal void AddLoaded(T item)
         {
             _records.Add(item);
-            _counter = item.Id;
+            _counter = _tableBuilder.EntityBuilder.IdRule.GetId(item);
         }
 
         private void BaseAdd(T item)
@@ -128,13 +135,13 @@ namespace Xtl
 
         private void AddBinding(T item)
         {
-            item.PropertyChanged += RecordsPropertyChanged;
+            item.PropertyChanged += OnRecordsPropertyChanged;
             _tableBuilder.EntityBuilder.AddBinding(item);
         }
 
         private void RemoveBindings(T item)
         {
-            item.PropertyChanged -= RecordsPropertyChanged;
+            item.PropertyChanged -= OnRecordsPropertyChanged;
             _tableBuilder.EntityBuilder.RemoveBinding(item);
         }
 

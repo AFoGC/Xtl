@@ -33,7 +33,7 @@ namespace Xtl
             _setToDefaultActions = new List<Action<Table<TRecord>>>();
         }
 
-        public void AddSaveRule<D>(Expression<Func<TTable, D>> saveAction, D defaultValue)
+        public void AddTableSaveRule<D>(Expression<Func<TTable, D>> saveAction, D defaultValue)
         {
             ArgumentNullException.ThrowIfNull(saveAction, nameof(saveAction));
             PropertyInfo property = Helper.GetPropertyInfo(null, saveAction);
@@ -105,7 +105,7 @@ namespace Xtl
                         record = new TRecord();
                     }
                     
-                    EntityBuilder.LoadNode(record, node);
+                    EntityBuilder.SaveRules.LoadNode(record, node);
                     table.AddLoaded(record);
                 }
             }
@@ -132,8 +132,19 @@ namespace Xtl
 
             foreach (var record in table)
             {
-                EntityBuilder.SaveNode(recordsNode, record, table.Default);
+                EntityBuilder.SaveRules.SaveNode(recordsNode, record, table.Default);
             }
+        }
+
+        public void SetEntityId(Expression<Func<TRecord, int>> idExpression)
+        {
+            EntityBuilder.SetId(idExpression);
+            EntityBuilder.SaveRules.AddSaveRule(idExpression);
+        }
+
+        public void AddEntitySaveRule<TValue>(Expression<Func<TRecord, TValue>> saveAction)
+        {
+            EntityBuilder.SaveRules.AddSaveRule(saveAction);
         }
     }
 }

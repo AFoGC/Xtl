@@ -10,7 +10,6 @@ namespace Xtl
 {
     public abstract class Record : ICloneable, INotifyPropertyChanged
     {
-        public int Id { get; internal set; }
         public abstract object Clone();
 
         public event PropertyChangedEventHandler? PropertyChanged;

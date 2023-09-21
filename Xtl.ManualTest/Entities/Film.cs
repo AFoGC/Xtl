@@ -8,6 +8,7 @@ namespace Xtl.ManualTest.Entities
 {
     public class Film : Record
     {
+        private int _id = 0;
         private string _name = string.Empty;
         private DateTime? _watchDate;
         private int _realiseDate;
@@ -15,6 +16,11 @@ namespace Xtl.ManualTest.Entities
 
         private Genre _genre = null;
 
+        public int Id
+        {
+            get => _id;
+            set { _id = value; OnPropertyChanged(); }
+        }
         public string Name
         { 
             get => _name; 
