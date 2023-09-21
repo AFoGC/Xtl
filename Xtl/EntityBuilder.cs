@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
+using Xtl.Rules;
 
 namespace Xtl
 {
@@ -19,59 +20,40 @@ namespace Xtl
 
         private Action<TRecord> _invokeRelations;
 
-        private Func<TRecord, XmlDocument, TRecord?, XmlNode?> _saveDelegate;
-        private Action<TRecord, XmlNode> _loadDelegate;
-
         private Action<TRecord> _hasOneRelationBindAction;
         private Action<TRecord> _hasOneRelationUnBindAction;
+
+        private IdRule<TRecord> _idRule;
+
+        private readonly EntitySaveRules<TRecord> _saveRules;
 
         public EntityBuilder(TablesCollection tablesCollection)
         {
             _tablesCollection = tablesCollection;
-
-            AddSaveRule(x => x.Id);
+            _saveRules = new EntitySaveRules<TRecord>();
         }
 
-        public void AddSaveRule<TValue>(Expression<Func<TRecord, TValue>> saveAction)
+        internal IdRule<TRecord> IdRule => _idRule;
+        internal EntitySaveRules<TRecord> SaveRules => _saveRules;
+
+        public void SetId(Expression<Func<TRecord, int>> idExpression)
         {
-            _saveDelegate += (TRecord record, XmlDocument document, TRecord? defRecord) =>
+            if (_idRule == null)
             {
-                string name = Helper.GetPropertyInfo(record, saveAction).Name;
-                var output = new StringBuilder();
-
-                Func<TRecord, TValue> func = saveAction.Compile();
-
-                if (defRecord != null)
-                    if (Object.Equals(func.Invoke(record), func.Invoke(defRecord)))
-                        return null;
-
-                XmlNode node = document.CreateNode(XmlNodeType.Element, name, null);
-                node.InnerXml = Helper.ToXmlValue(func.Invoke(record));
-                return node;
-            };
-
-            _loadDelegate += (TRecord record, XmlNode recordNode) =>
+                _idRule = new IdRule<TRecord>(idExpression);
+            }
+            else
             {
-                PropertyInfo property = Helper.GetPropertyInfo(record, saveAction);
-                XmlRootAttribute xmlRoot = new XmlRootAttribute(property.Name);
-                XmlSerializer serializer = new XmlSerializer(property.PropertyType, xmlRoot);
-
-                XmlNode? fieldNode = recordNode[property.Name];
-                if (fieldNode != null)
-                {
-                    object value = Helper.FromXml(property.Name, property.PropertyType, fieldNode);
-                    property.SetValue(record, value);
-                }
-            };
+                throw new Exception("Id already setted");
+            }
         }
-
         
         internal void HasOne<TValue>(Expression<Func<TRecord, int>> getIdExpression, Expression<Func<TRecord, TValue>> hasOneExpression) where TValue : Record, new()
         {
             PropertyInfo idProperty = Helper.GetPropertyInfo(null, getIdExpression);
             PropertyInfo hasOneProperty = Helper.GetPropertyInfo(null, hasOneExpression);
 
-            Func<TRecord, int> getIdFunc = getIdExpression.Compile();
+            Func<TRecord, int> getForeignKeyIdFunc = getIdExpression.Compile();
 
             PropertyChangedEventHandler propertyChangedEventHandler = new PropertyChangedEventHandler((s, e) =>
             {
@@ -79,10 +61,13 @@ namespace Xtl
                 {
                     TRecord record = (TRecord)s;
                     Table<TValue> table = _tablesCollection.GetTableByRecord<TValue>();
-                    int id = getIdFunc(record);
-                    if (id != 0)
+                    IdRule<TValue> valueIdRule = table.TableBuilder.EntityBuilder.IdRule;
+
+                    int recordId = getForeignKeyIdFunc(record);
+
+                    if (recordId != 0)
                     {
-                        TValue value = table.First(x => x.Id == id);
+                        TValue value = table.First(x => valueIdRule.GetId(x) == recordId);
                         hasOneProperty.SetValue(record, value);
                     }
                     else
@@ -95,11 +80,13 @@ namespace Xtl
             _invokeRelations += (TRecord record) =>
             {
                 Table<TValue> table = _tablesCollection.GetTableByRecord<TValue>();
-                int id = getIdFunc(record);
+                IdRule<TValue> valueIdRule = table.TableBuilder.EntityBuilder.IdRule;
+
+                int id = getForeignKeyIdFunc(record);
 
                 if (id != 0)
                 {
-                    TValue value = table.First(x => x.Id == id);
+                    TValue value = table.First(x => valueIdRule.GetId(x) == id);
                     hasOneProperty.SetValue(record, value);
                 }
                 else
@@ -134,9 +121,9 @@ namespace Xtl
             _invokeRelations += (TRecord record) =>
             {
                 RecordsCollection<TValue> valuesCollection = hasManyFunc(record);
-                valuesCollection.SetHasOneProperty(hasOneProperty, foreignKeyProperty, record.Id);
+                valuesCollection.SetHasOneProperty(hasOneProperty, foreignKeyProperty, _idRule.GetId(record));
 
-                var values = valuesTable.Where(x => getIdFunc(x) == record.Id);
+                var values = valuesTable.Where(x => getIdFunc(x) == _idRule.GetId(record));
 
                 foreach(var item in values)
                     valuesCollection.InternalAdd(item);
@@ -176,43 +163,19 @@ namespace Xtl
             */
         }
 
-        internal void SaveNode(XmlNode recordsNode, TRecord record, TRecord? defRecord)
-        {
-            XmlDocument document = recordsNode.OwnerDocument;
-            XmlNode recordNode = document.CreateNode(XmlNodeType.Element, typeof(TRecord).Name, null);
-
-            var nodes = _saveDelegate.GetInvocationList()
-                .Select(x => (XmlNode?)x.DynamicInvoke(record, document, defRecord));
-
-            foreach (var node in nodes)
-                if (node != null)
-                    recordNode.AppendChild(node);
-
-            recordsNode.AppendChild(recordNode);
-        }
-
-        internal void LoadNode(TRecord record, XmlNode recordNode)
-        {
-            if (_loadDelegate != null)
-                _loadDelegate.Invoke(record, recordNode);
-        }
-
         internal void AddBinding(TRecord record)
         {
-            if (_hasOneRelationBindAction != null)
-                _hasOneRelationBindAction.Invoke(record);
+            _hasOneRelationBindAction?.Invoke(record);
         }
 
         internal void RemoveBinding(TRecord record)
         {
-            if (_hasOneRelationUnBindAction != null)
-                _hasOneRelationUnBindAction.Invoke(record);
+            _hasOneRelationUnBindAction?.Invoke(record);
         }
 
         internal void InvokeBinding(TRecord record)
         {
-            if (_invokeRelations != null)
-                _invokeRelations.Invoke(record);
+            _invokeRelations?.Invoke(record);
         }
     }
 }
