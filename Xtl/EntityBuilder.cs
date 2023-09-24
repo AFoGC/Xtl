@@ -24,7 +24,7 @@ namespace Xtl
 
             IdRule = new IdRule<TRecord>();
             SaveRules = new EntitySaveRules<TRecord>();
-            
+            RelationRules = new EntityRelationRules<TRecord>(tablesCollection, IdRule);
         }
 
         internal IdRule<TRecord> IdRule { get; }
