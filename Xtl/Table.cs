@@ -87,7 +87,7 @@ namespace Xtl
 
             BaseAdd(item);
 
-            _tableBuilder.EntityBuilder.InvokeBinding(item);
+            _tableBuilder.EntityBuilder.RelationRules.InvokeBinding(item);
             return item;
         }
 
@@ -136,13 +136,13 @@ namespace Xtl
         private void AddBinding(T item)
         {
             item.PropertyChanged += OnRecordsPropertyChanged;
-            _tableBuilder.EntityBuilder.AddBinding(item);
+            _tableBuilder.EntityBuilder.RelationRules.AddBinding(item);
         }
 
         private void RemoveBindings(T item)
         {
             item.PropertyChanged -= OnRecordsPropertyChanged;
-            _tableBuilder.EntityBuilder.RemoveBinding(item);
+            _tableBuilder.EntityBuilder.RelationRules.RemoveBinding(item);
         }
 
         public IEnumerator<T> GetEnumerator()
@@ -159,7 +159,7 @@ namespace Xtl
         {
             foreach (var record in _records)
             {
-                _tableBuilder.EntityBuilder.InvokeBinding(record);
+                _tableBuilder.EntityBuilder.RelationRules.InvokeBinding(record);
             }
         }
     }

@@ -33,10 +33,10 @@ namespace Xtl
         public void AddOneToMany<TMany, TOne>(Expression<Func<TOne, int>> getIdExpression, Expression<Func<TOne, TMany>> hasOne, Expression<Func<TMany, RecordsCollection<TOne>>> hasMany) where TMany : Record, new() where TOne : Record, new()
         {
             Table<TOne> ones = _tablesCollection.GetTableByRecord<TOne>();
-            ones.TableBuilder.EntityBuilder.HasOne(getIdExpression, hasOne);
+            ones.TableBuilder.EntityBuilder.RelationRules.HasOne(getIdExpression, hasOne);
 
             Table<TMany> manies = _tablesCollection.GetTableByRecord<TMany>();
-            manies.TableBuilder.EntityBuilder.HasMany(getIdExpression, hasOne, hasMany);
+            manies.TableBuilder.EntityBuilder.RelationRules.HasMany(getIdExpression, hasOne, hasMany);
         }
 
         public void AddOneToOne<TMain, TSub>(Expression<Func<TMain, TSub>> hasOne)
