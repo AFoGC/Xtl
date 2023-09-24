@@ -57,5 +57,10 @@ namespace Xtl
         {
             EntityBuilder.SaveRules.AddSaveRule(saveAction);
         }
+
+        public void SetIdGeneration(Func<int, int?> idGenerationExpression)
+        {
+            EntityBuilder.IdRule.SetIdGenerationExpression(idGenerationExpression);
+        }
     }
 }

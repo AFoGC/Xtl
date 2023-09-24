@@ -19,14 +19,14 @@ namespace Xtl.ManualTest
             foreach (Film film in films)
             {
                 if (film.Genre != null)
-                    Console.WriteLine($"Name: {film.Name}, Genre: {film.Genre.Name}");
+                    Console.WriteLine($"{film.Id}) Name: {film.Name}, Genre: {film.Genre.Name}");
                 else
-                    Console.WriteLine($"Name: {film.Name}, Genre: NULL");
+                    Console.WriteLine($"{film.Id}) Name: {film.Name}, Genre: NULL");
             }
             Console.WriteLine("Genres: ");
             foreach (Genre genre in genres)
             {
-                Console.WriteLine($"{genre.Name}");
+                Console.WriteLine($"{genre.Id}) {genre.Name}");
                 foreach(Film film in genre.Films)
                 {
                     Console.WriteLine($"\t{film.Name}");

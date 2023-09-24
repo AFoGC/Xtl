@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Serialization;
+using Xtl.Rules;
 
 namespace Xtl
 {
@@ -18,13 +19,12 @@ namespace Xtl
         private readonly ObservableCollection<T> _records;
 
         private ITableBuilder<T> _tableBuilder;
-        private int _counter;
 
         public Table()
         {
             _records = new ObservableCollection<T>();
             _records.CollectionChanged += OnRecordsCollectionChanged;
-            _counter = 0;
+            LastID = 1;
         }
 
         public event NotifyCollectionChangedEventHandler? CollectionChanged;
@@ -43,7 +43,7 @@ namespace Xtl
         internal ITableBuilder<T> TableBuilder => _tableBuilder;
         public override Type RecordType => typeof(T);
         public T? Default => _tableBuilder.DefaultRecord;
-        public int LastID => _counter;
+        public int LastID { get; private set; }
 
         public int Count => _records.Count;
         public bool IsReadOnly => false;
@@ -62,6 +62,8 @@ namespace Xtl
         {
             Clear();
             _tableBuilder.LoadTable(this, tableNode);
+            LastID = _records.Max(x => _tableBuilder.EntityBuilder.IdRule.GetId(x));
+            LastID++;
         }
 
         void ICollection<T>.Add(T item)
@@ -82,25 +84,36 @@ namespace Xtl
 
         public T Add(T item)
         {
-            int id = ++_counter;
-            _tableBuilder.EntityBuilder.IdRule.SetId(item, id);
+            _tableBuilder.EntityBuilder.IdRule.SetNewId(item, LastID);
 
-            BaseAdd(item);
+            AddBinding(item);
+            AddInOrder(item);
 
             _tableBuilder.EntityBuilder.RelationRules.InvokeBinding(item);
             return item;
         }
 
+        private void AddInOrder(T item)
+        {
+            IdRule<T> idRule = TableBuilder.EntityBuilder.IdRule;
+
+            T? prev = _records.Where(x => idRule.GetId(x) < idRule.GetId(item)).LastOrDefault();
+
+            if (prev != null)
+            {
+                int index = _records.IndexOf(prev) + 1;
+                _records.Insert(index, item);
+            }
+            else
+            {
+                _records.Insert(0, item);
+            }
+        }
+
         internal void AddLoaded(T item)
         {
             _records.Add(item);
-            _counter = _tableBuilder.EntityBuilder.IdRule.GetId(item);
-        }
-
-        private void BaseAdd(T item)
-        {
-            AddBinding(item);
-            _records.Add(item);
+            //LastID = _tableBuilder.EntityBuilder.IdRule.GetId(item);
         }
 
         public void Clear()
