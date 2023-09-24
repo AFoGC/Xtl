@@ -10,13 +10,29 @@ namespace Xtl.Rules
 {
     internal class IdRule<TRecord> where TRecord : Record, new()
     {
-        private readonly Func<TRecord, int> _getIdFunction;
-        private readonly PropertyInfo _idProperty;
+        private Func<TRecord, int> _getIdFunction;
+        private PropertyInfo _idProperty;
+        private bool _hasIdProperty;
 
-        public IdRule(Expression<Func<TRecord, int>> idExpression)
+        public IdRule()
         {
-            _getIdFunction = idExpression.Compile();
-            _idProperty = Helper.GetPropertyInfo(null, idExpression);
+            
+        }
+
+        public bool HasIdProperty => _hasIdProperty;
+
+        internal void SetIdExpression(Expression<Func<TRecord, int>> idExpression)
+        {
+            if (_hasIdProperty == false)
+            {
+                _getIdFunction = idExpression.Compile();
+                _idProperty = Helper.GetPropertyInfo(null, idExpression);
+                _hasIdProperty = true;
+            }
+            else
+            {
+                throw new Exception("Id already setted"); ;
+            }
         }
 
         internal int GetId(TRecord record)
