@@ -14,9 +14,11 @@ namespace Xtl.Rules
         private PropertyInfo _idProperty;
         private bool _hasIdProperty;
 
+        private readonly IdGenerationRule _idGenerationRule;
+
         public IdRule()
         {
-            
+            _idGenerationRule = new IdGenerationRule();
         }
 
         public bool HasIdProperty => _hasIdProperty;
@@ -35,14 +37,23 @@ namespace Xtl.Rules
             }
         }
 
+        internal void SetIdGenerationExpression(Func<int, int?> idGenerationExpression)
+        {
+            _idGenerationRule.SetIdGenerationExpression(idGenerationExpression);
+        }
+
         internal int GetId(TRecord record)
         {
             return _getIdFunction(record);
         }
 
-        internal void SetId(TRecord record, int id)
+        internal void SetNewId(TRecord record, int counter)
         {
-            _idProperty.SetValue(record, id);
+            int? newId = _idGenerationRule.GenerateId(counter);
+            if (newId != null)
+            {
+                _idProperty.SetValue(record, newId);
+            }
         }
 
         internal void AddIdChangeTracking(TRecord record)

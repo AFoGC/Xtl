@@ -14,6 +14,7 @@ collection.Configure(builder =>
     {
         x.DefaultTable = new FilmsTable();
         x.DefaultRecord = new Film() { Name = "Hui3" };
+        x.SetIdGeneration(x => x++);
 
         x.AddTableSaveRule(x => x.MarksSystem, 0);
 
@@ -28,6 +29,7 @@ collection.Configure(builder =>
     {
         x.DefaultTable = new GenresTable();
         x.DefaultRecord = new Genre();
+        x.SetIdGeneration(x => x++);
 
         x.SetEntityId(x => x.Id);
         x.AddEntitySaveRule(x => x.Name);
@@ -43,7 +45,8 @@ TablesConsole.WriteTabes(collection);
 Table<Film> films = collection.GetTableByRecord<Film>();
 Table<Genre> genres = collection.GetTableByRecord<Genre>();
 
-films.Remove(films.First());
+films.Add(new Film { Id = 9, Name = "HUUUUI" });
+genres.Add(new Genre { Id = 9, Name = "AHHH" });
 TablesConsole.WriteTabes(collection);
 /*
 films.RecordsPropertyChanged += Films_RecordsPropertyChanged;
