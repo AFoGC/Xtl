@@ -40,6 +40,7 @@ namespace Xtl.ManualTest.Entities
         {
             return new Genre
             {
+                Id = Id,
                 Name = Name,
                 IsSerial = IsSerial
             };

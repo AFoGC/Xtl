@@ -21,13 +21,6 @@ namespace Xtl
         public void AddTable<TTable, TRecord>(Action<TableBuilder<TTable, TRecord>> buildAction) where TTable : Table<TRecord>, new() where TRecord : Record, new()
         {
             _tablesCollection.AddTable<TTable, TRecord>(buildAction);
-            /*
-            TTable table = new TTable();
-            TableBuilder<TTable, TRecord> builder = new TableBuilder<TTable, TRecord>(_tablesCollection);
-            buildAction(builder);
-            table.SetBuilder(builder);
-            _tables.Add(table);
-            */
         }
 
         public void AddOneToMany<TMany, TOne>(Expression<Func<TOne, int>> getIdExpression, Expression<Func<TOne, TMany>> hasOne, Expression<Func<TMany, RecordsCollection<TOne>>> hasMany) where TMany : Record, new() where TOne : Record, new()
@@ -39,9 +32,10 @@ namespace Xtl
             manies.TableBuilder.EntityBuilder.RelationRules.HasMany(getIdExpression, hasOne, hasMany);
         }
 
-        public void AddOneToOne<TMain, TSub>(Expression<Func<TMain, TSub>> hasOne)
+        public void AddOneToOne<TMain, TSub>(Expression<Func<TMain, TSub>> hasOne) where TMain : Record, new() where TSub : Record, new()
         {
-
+            Table<TMain> main = _tablesCollection.GetTableByRecord<TMain>();
+            main.TableBuilder.EntityBuilder.RelationRules.HasOneExclusive(hasOne);
         }
     }
 }

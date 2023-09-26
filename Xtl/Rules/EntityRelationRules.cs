@@ -128,17 +128,17 @@ namespace Xtl.Rules
 
         internal void HasOneExclusive<TValue>(Expression<Func<TRecord, TValue>> hasOneExpression) where TValue : Record, new()
         {
-            /*
             Func<TRecord, TValue> hasOneFunc = hasOneExpression.Compile();
             Table<TValue> table = _tablesCollection.GetTableByRecord<TValue>();
+            IdRule<TValue> valueIdRule = table.TableBuilder.EntityBuilder.IdRule;
+
             PropertyInfo hasOneProperty = Helper.GetPropertyInfo(null, hasOneExpression);
 
             _invokeRelations += (TRecord record) =>
             {
-                TValue value = table.First(x => x.Id == record.Id);
+                TValue value = table.First(x => valueIdRule.GetId(x) == _idRule.GetId(record));
                 hasOneProperty.SetValue(record, value);
             };
-            */
         }
 
         internal void AddBinding(TRecord record)
