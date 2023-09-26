@@ -36,7 +36,17 @@ collection.Configure(builder =>
         x.AddEntitySaveRule(x => x.IsSerial);
     });
 
+    builder.AddTable<PriorityFilmsTable, PriorityFilm>(x =>
+    {
+        x.DefaultTable = new PriorityFilmsTable();
+        x.DefaultRecord = new PriorityFilm();
+
+        x.SetEntityId(x => x.Id);
+        x.AddEntitySaveRule(x => x.CreationTime);
+    });
+
     builder.AddOneToMany<Genre, Film>(x => x.GenreId, x => x.Genre, x => x.Films);
+    builder.AddOneToOne<PriorityFilm, Film>(x => x.Film);
 });
 
 collection.Load("Out3.xml");
@@ -44,9 +54,12 @@ TablesConsole.WriteTabes(collection);
 
 Table<Film> films = collection.GetTableByRecord<Film>();
 Table<Genre> genres = collection.GetTableByRecord<Genre>();
+Table<PriorityFilm> priorityFilms = collection.GetTableByRecord<PriorityFilm>();
 
-films.Add(new Film { Id = 9, Name = "HUUUUI" });
-genres.Add(new Genre { Id = 9, Name = "AHHH" });
+priorityFilms.Add(new PriorityFilm { Id = 3, CreationTime = DateTime.Now });
+priorityFilms.Add(new PriorityFilm { Id = 1, CreationTime = DateTime.Now });
+priorityFilms.Add(new PriorityFilm { Id = 4, CreationTime = DateTime.Now });
+
 TablesConsole.WriteTabes(collection);
 /*
 films.RecordsPropertyChanged += Films_RecordsPropertyChanged;

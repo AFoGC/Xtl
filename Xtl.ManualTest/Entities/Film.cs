@@ -52,6 +52,7 @@ namespace Xtl.ManualTest.Entities
         {
             return new Film 
             { 
+                Id = Id,
                 Name = Name, 
                 GenreId = GenreId, 
                 RealiseDate = RealiseDate, 

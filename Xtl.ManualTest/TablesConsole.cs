@@ -13,6 +13,7 @@ namespace Xtl.ManualTest
         {
             Table<Film> films = tablesCollection.GetTableByRecord<Film>();
             Table<Genre> genres = tablesCollection.GetTableByRecord<Genre>();
+            Table<PriorityFilm> priorityFilms = tablesCollection.GetTableByRecord<PriorityFilm>();
 
             Console.WriteLine("------------New Table-----------");
             Console.WriteLine("Films: ");
@@ -22,6 +23,11 @@ namespace Xtl.ManualTest
                     Console.WriteLine($"{film.Id}) Name: {film.Name}, Genre: {film.Genre.Name}");
                 else
                     Console.WriteLine($"{film.Id}) Name: {film.Name}, Genre: NULL");
+            }
+            Console.WriteLine("PriorityFilms: ");
+            foreach (PriorityFilm priorityFilm in priorityFilms)
+            {
+                Console.WriteLine($"{priorityFilm.Id}) Name: {priorityFilm.Film.Name}, CreationTime: {priorityFilm.CreationTime}");
             }
             Console.WriteLine("Genres: ");
             foreach (Genre genre in genres)
