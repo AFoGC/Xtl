@@ -11,8 +11,10 @@ namespace Xtl
     {
         internal abstract void InvokeBindings();
         internal abstract void AddAllBindings();
-        public abstract void SaveTable(XmlDocument document);
-        public abstract void LoadTable(XmlNode tableNode);
+        internal abstract void InvokeLoaded();
+        internal abstract void InvokeSaved();
+        internal abstract void SaveTable(XmlDocument document);
+        internal abstract void LoadTable(XmlNode tableNode);
         public abstract Type RecordType { get; }
     }
 }

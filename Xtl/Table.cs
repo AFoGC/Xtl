@@ -6,15 +6,17 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection.PortableExecutable;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Serialization;
+using Xtl.EventHandlers;
 using Xtl.Rules;
 
 namespace Xtl
 {
-    public class Table<T> : BaseTable, ICollection<T>, INotifyCollectionChanged where T : Record, new()
+    public class Table<T> : BaseTable, ICollection<T>, INotifyCollectionChanged, INotifyPropertyChanged where T : Record, new()
     {
         private readonly ObservableCollection<T> _records;
 
@@ -29,22 +31,53 @@ namespace Xtl
 
         public event NotifyCollectionChangedEventHandler? CollectionChanged;
         public event PropertyChangedEventHandler? RecordsPropertyChanged;
+        public event TableLoadedEventHandler? TableLoaded;
+        public event TableLoadedEventHandler? TableSaved;
 
-        private void OnRecordsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        internal override void InvokeLoaded()
         {
-            CollectionChanged?.Invoke(this, e);
+            OnLoaded();
         }
 
-        private void OnRecordsPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        internal override void InvokeSaved()
+        {
+            OnSaved();
+        }
+
+        protected virtual void OnSaved()
+        {
+            TableSaved?.Invoke(this);
+        }
+
+        protected virtual void OnLoaded()
+        {
+            TableLoaded?.Invoke(this);
+        }
+
+        protected virtual void OnRecordsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            CollectionChanged?.Invoke(this, e);
+            OnPropertyChanged(nameof(Count));
+        }
+
+        protected virtual void OnRecordsPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             RecordsPropertyChanged?.Invoke(sender, e);
         }
 
+        protected void OnPropertyChanged([CallerMemberName] string propertyName = "")
+        {
+            var args = new PropertyChangedEventArgs(propertyName);
+            PropertyChanged?.Invoke(this, args);
+        }
+
         internal ITableBuilder<T> TableBuilder => _tableBuilder;
+        internal int LastID { get; private set; }
+
         public override Type RecordType => typeof(T);
         public T? Default => _tableBuilder.DefaultRecord;
-        public int LastID { get; private set; }
-
         public int Count => _records.Count;
         public bool IsReadOnly => false;
 
@@ -53,12 +86,12 @@ namespace Xtl
             _tableBuilder = builder;
         }
 
-        public override void SaveTable(XmlDocument document)
+        internal override void SaveTable(XmlDocument document)
         {
             _tableBuilder.SaveTable(this, document);
         }
 
-        public override void LoadTable(XmlNode tableNode)
+        internal override void LoadTable(XmlNode tableNode)
         {
             Clear();
             _tableBuilder.LoadTable(this, tableNode);
@@ -113,7 +146,6 @@ namespace Xtl
         internal void AddLoaded(T item)
         {
             _records.Add(item);
-            //LastID = _tableBuilder.EntityBuilder.IdRule.GetId(item);
         }
 
         public void Clear()
