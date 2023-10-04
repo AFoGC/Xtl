@@ -26,11 +26,6 @@ namespace Xtl
         public EntityBuilder<TRecord> EntityBuilder { get; }
 
         public TRecord? DefaultRecord { get; set; }
-        public TTable? DefaultTable
-        {
-            get => _saveRules.DefaultTable;
-            set => _saveRules.DefaultTable = value;
-        }
 
         public void AddTableSaveRule<D>(Expression<Func<TTable, D>> saveAction, D defaultValue)
         {

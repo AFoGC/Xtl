@@ -12,7 +12,6 @@ collection.Configure(builder =>
 {
     builder.AddTable<FilmsTable, Film>(x =>
     {
-        x.DefaultTable = new FilmsTable();
         x.DefaultRecord = new Film() { Name = "Hui3" };
         x.SetIdGeneration(x => x++);
 
@@ -27,7 +26,6 @@ collection.Configure(builder =>
 
     builder.AddTable<GenresTable, Genre>(x =>
     {
-        x.DefaultTable = new GenresTable();
         x.DefaultRecord = new Genre();
         x.SetIdGeneration(x => x++);
 
@@ -38,7 +36,6 @@ collection.Configure(builder =>
 
     builder.AddTable<PriorityFilmsTable, PriorityFilm>(x =>
     {
-        x.DefaultTable = new PriorityFilmsTable();
         x.DefaultRecord = new PriorityFilm();
 
         x.SetEntityId(x => x.Id);
