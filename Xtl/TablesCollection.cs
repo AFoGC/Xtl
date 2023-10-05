@@ -80,22 +80,22 @@ namespace Xtl
 
         protected virtual void OnTablesSaving()
         {
-            TablesSaving.Invoke(this);
+            TablesSaving?.Invoke(this);
         }
 
         protected virtual void OnTablesSaved()
         {
-            TablesSaved.Invoke(this);
+            TablesSaved?.Invoke(this);
         }
 
         protected virtual void OnTablesLoading()
         {
-            TablesLoading.Invoke(this);
+            TablesLoading?.Invoke(this);
         }
 
         protected virtual void OnTablesLoaded()
         {
-            TablesLoaded.Invoke(this);
+            TablesLoaded?.Invoke(this);
         }
 
         internal void AddTable<TTable, TRecord>(Action<TableBuilder<TTable, TRecord>> buildAction) where TTable : Table<TRecord>, new() where TRecord : Record, new()

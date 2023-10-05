@@ -18,8 +18,6 @@ namespace Xtl.Rules
 
         private readonly EntitySaveRules<TRecord> _entitySaveRules;
 
-        internal TTable? DefaultTable { get; set; }
-
         public TableSaveRules(EntitySaveRules<TRecord> entitySaveRules)
         {
             _entitySaveRules = entitySaveRules;
@@ -63,8 +61,7 @@ namespace Xtl.Rules
 
             _setToDefaultDelegate += (Table<TRecord> table) =>
             {
-                object value = property.GetValue(DefaultTable);
-                property.SetValue(table, value);
+                property.SetValue(table, defaultValue);
             };
         }
 

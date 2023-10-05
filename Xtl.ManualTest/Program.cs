@@ -53,11 +53,23 @@ Table<Film> films = collection.GetTableByRecord<Film>();
 Table<Genre> genres = collection.GetTableByRecord<Genre>();
 Table<PriorityFilm> priorityFilms = collection.GetTableByRecord<PriorityFilm>();
 
+Film film = films.First();
+genres.First().Films.Remove(film);
+
+TablesConsole.WriteTabes(collection);
+
+films.Remove(film);
+TablesConsole.WriteTabes(collection);
+
+
+
+/*
 priorityFilms.Add(new PriorityFilm { Id = 3, CreationTime = DateTime.Now });
 priorityFilms.Add(new PriorityFilm { Id = 1, CreationTime = DateTime.Now });
 priorityFilms.Add(new PriorityFilm { Id = 4, CreationTime = DateTime.Now });
 
 TablesConsole.WriteTabes(collection);
+*/
 /*
 films.RecordsPropertyChanged += Films_RecordsPropertyChanged;
 
