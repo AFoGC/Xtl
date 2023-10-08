@@ -54,11 +54,12 @@ Table<Genre> genres = collection.GetTableByRecord<Genre>();
 Table<PriorityFilm> priorityFilms = collection.GetTableByRecord<PriorityFilm>();
 
 Film film = films.First();
-genres.First().Films.Remove(film);
+PriorityFilm priority = new PriorityFilm { Id = film.Id, CreationTime = DateTime.Now};
 
+Console.WriteLine($"({film.Priority.CreationTime})");
 TablesConsole.WriteTabes(collection);
 
-films.Remove(film);
+priorityFilms.Remove(priority);
 TablesConsole.WriteTabes(collection);
 
 

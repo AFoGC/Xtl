@@ -38,7 +38,7 @@ namespace Xtl
             main.TableBuilder.EntityBuilder.RelationRules.HasOneExclusive(hasFkPk);
 
             Table<TSub> sub = _tablesCollection.GetTableByRecord<TSub>();
-            sub.TableBuilder.EntityBuilder.RelationRules.HasOneExclusive(hasOne);
+            sub.TableBuilder.EntityBuilder.RelationRules.HasOneSub(hasOne, hasFkPk);
         }
     }
 }

@@ -149,7 +149,10 @@ namespace Xtl.Rules
         {
             Func<TRecord, TValue> hasOneFunc = hasOneExpression.Compile();
             Func<TValue, TRecord> hasFkPkFunc = hasFkPkExpression.Compile();
+
             Table<TValue> valuesTable = _tablesCollection.GetTableByRecord<TValue>();
+            Table<TRecord> recordsTable = _tablesCollection.GetTableByRecord<TRecord>();
+
             IdRule<TValue> valueIdRule = valuesTable.TableBuilder.EntityBuilder.IdRule;
 
             PropertyInfo hasOneProperty = Helper.GetPropertyInfo(null, hasOneExpression);
@@ -166,13 +169,17 @@ namespace Xtl.Rules
 
                 if (e.Action == NotifyCollectionChangedAction.Reset)
                 {
-
+                    foreach (TRecord item in recordsTable)
+                    {
+                        TValue? value = valuesTable.FirstOrDefault(x => valueIdRule.GetId(x) == _idRule.GetId(item));
+                        hasOneProperty.SetValue(item, value);
+                    }
                 }
             });
 
             _invokeRelations += (TRecord record) =>
             {
-                TValue value = valuesTable.First(x => valueIdRule.GetId(x) == _idRule.GetId(record));
+                TValue? value = valuesTable.FirstOrDefault(x => valueIdRule.GetId(x) == _idRule.GetId(record));
                 hasOneProperty.SetValue(record, value);
             };
         }
