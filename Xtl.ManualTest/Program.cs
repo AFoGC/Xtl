@@ -43,7 +43,7 @@ collection.Configure(builder =>
     });
 
     builder.AddOneToMany<Genre, Film>(x => x.GenreId, x => x.Genre, x => x.Films);
-    builder.AddOneToOne<PriorityFilm, Film>(x => x.Film);
+    builder.AddOneToOne<PriorityFilm, Film>(x => x.Film, y => y.Priority);
 });
 
 collection.Load("Out3.xml");

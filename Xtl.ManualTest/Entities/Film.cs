@@ -15,6 +15,7 @@ namespace Xtl.ManualTest.Entities
         private int _genreId;
 
         private Genre _genre = null;
+        private PriorityFilm _priority = null;
 
         public int Id
         {
@@ -46,6 +47,12 @@ namespace Xtl.ManualTest.Entities
         { 
             get => _genre; 
             private set { _genre = value; OnPropertyChanged(); } 
+        }
+
+        public PriorityFilm Priority
+        {
+            get => _priority;
+            private set { _priority = value; OnPropertyChanged(); }
         }
 
         public override object Clone()

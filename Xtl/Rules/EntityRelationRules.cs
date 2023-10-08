@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Linq.Expressions;
@@ -15,6 +16,9 @@ namespace Xtl.Rules
 
         private Action<TRecord> _hasOneRelationBindAction;
         private Action<TRecord> _hasOneRelationUnBindAction;
+
+        private Action<TRecord> _hasOneExclusiveBindAction;
+        private Action<TRecord> _hasOneExclusiveUnBindAction;
 
         private readonly TablesCollection _tablesCollection;
         private readonly IdRule<TRecord> _idRule;
@@ -137,6 +141,38 @@ namespace Xtl.Rules
             _invokeRelations += (TRecord record) =>
             {
                 TValue value = table.First(x => valueIdRule.GetId(x) == _idRule.GetId(record));
+                hasOneProperty.SetValue(record, value);
+            };
+        }
+
+        internal void HasOneSub<TValue>(Expression<Func<TRecord, TValue>> hasOneExpression, Expression<Func<TValue, TRecord>> hasFkPkExpression) where TValue : Record, new()
+        {
+            Func<TRecord, TValue> hasOneFunc = hasOneExpression.Compile();
+            Func<TValue, TRecord> hasFkPkFunc = hasFkPkExpression.Compile();
+            Table<TValue> valuesTable = _tablesCollection.GetTableByRecord<TValue>();
+            IdRule<TValue> valueIdRule = valuesTable.TableBuilder.EntityBuilder.IdRule;
+
+            PropertyInfo hasOneProperty = Helper.GetPropertyInfo(null, hasOneExpression);
+
+            valuesTable.CollectionChanged += new NotifyCollectionChangedEventHandler((s, e) =>
+            {
+                if (e.Action == NotifyCollectionChangedAction.Remove)
+                {
+                    TValue value = (TValue)e.OldItems[0];
+                    TRecord record = hasFkPkFunc(value);
+
+                    hasOneProperty.SetValue(record, null);
+                }
+
+                if (e.Action == NotifyCollectionChangedAction.Reset)
+                {
+
+                }
+            });
+
+            _invokeRelations += (TRecord record) =>
+            {
+                TValue value = valuesTable.First(x => valueIdRule.GetId(x) == _idRule.GetId(record));
                 hasOneProperty.SetValue(record, value);
             };
         }

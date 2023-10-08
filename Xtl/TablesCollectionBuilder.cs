@@ -32,10 +32,13 @@ namespace Xtl
             manies.TableBuilder.EntityBuilder.RelationRules.HasMany(getIdExpression, hasOne, hasMany);
         }
 
-        public void AddOneToOne<TMain, TSub>(Expression<Func<TMain, TSub>> hasOne) where TMain : Record, new() where TSub : Record, new()
+        public void AddOneToOne<TMain, TSub>(Expression<Func<TMain, TSub>> hasFkPk, Expression<Func<TSub, TMain>> hasOne) where TMain : Record, new() where TSub : Record, new()
         {
             Table<TMain> main = _tablesCollection.GetTableByRecord<TMain>();
-            main.TableBuilder.EntityBuilder.RelationRules.HasOneExclusive(hasOne);
+            main.TableBuilder.EntityBuilder.RelationRules.HasOneExclusive(hasFkPk);
+
+            Table<TSub> sub = _tablesCollection.GetTableByRecord<TSub>();
+            sub.TableBuilder.EntityBuilder.RelationRules.HasOneExclusive(hasOne);
         }
     }
 }
