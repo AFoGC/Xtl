@@ -53,9 +53,9 @@ Table<Film> films = collection.GetTableByRecord<Film>();
 Table<Genre> genres = collection.GetTableByRecord<Genre>();
 Table<PriorityFilm> priorityFilms = collection.GetTableByRecord<PriorityFilm>();
 
-//films.Add(new Film { Name = "Churka1" });
-//films.Add(new Film { Name = "Churka2" });
-//films.Add(new Film { Name = "Churka3" });
+films.Add(new Film { Name = "Churka1" });
+films.Add(new Film { Name = "Churka2" });
+films.Add(new Film { Name = "Churka3" });
 
 TablesConsole.WriteTabes(collection);
 

@@ -158,7 +158,7 @@ namespace Xtl.Rules
                     foreach (TValue item in valuesTable)
                     {
                         TRecord? record = recordsTable.FirstOrDefault(x => valueIdRule.GetId(item) == _idRule.GetId(x));
-                        hasFkPkProperty.SetValue(item, record);
+                        hasOneProperty.SetValue(item, record);
                     }
                 }
             });

@@ -100,7 +100,6 @@ namespace Xtl
             if (record != null)
             {
                 LastID = _tableBuilder.EntityBuilder.IdRule.GetId(record);
-                LastID++;
             }
             else
             {
