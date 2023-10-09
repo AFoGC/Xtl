@@ -6,10 +6,4 @@ using System.Threading.Tasks;
 
 namespace Xtl.Common
 {
-    public enum EventCollectionAction
-    {
-        Add = 1,
-        Remove = 2,
-        Clear = 3
-    }
 }

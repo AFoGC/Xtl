@@ -130,57 +130,45 @@ namespace Xtl.Rules
             valuesTable.RecordsPropertyChanged += valuesPropertyChanged;
         }
 
-        internal void HasOneExclusive<TValue>(Expression<Func<TRecord, TValue>> hasOneExpression) where TValue : Record, new()
+        internal void HasOneExclusive<TValue>(Expression<Func<TRecord, TValue>> hasFkPkExpression, Expression<Func<TValue, TRecord>> hasOneExpression) where TValue : Record, new()
         {
-            Func<TRecord, TValue> hasOneFunc = hasOneExpression.Compile();
-            Table<TValue> table = _tablesCollection.GetTableByRecord<TValue>();
-            IdRule<TValue> valueIdRule = table.TableBuilder.EntityBuilder.IdRule;
-
-            PropertyInfo hasOneProperty = Helper.GetPropertyInfo(null, hasOneExpression);
-
-            _invokeRelations += (TRecord record) =>
-            {
-                TValue value = table.First(x => valueIdRule.GetId(x) == _idRule.GetId(record));
-                hasOneProperty.SetValue(record, value);
-            };
-        }
-
-        internal void HasOneSub<TValue>(Expression<Func<TRecord, TValue>> hasOneExpression, Expression<Func<TValue, TRecord>> hasFkPkExpression) where TValue : Record, new()
-        {
-            Func<TRecord, TValue> hasOneFunc = hasOneExpression.Compile();
-            Func<TValue, TRecord> hasFkPkFunc = hasFkPkExpression.Compile();
+            Func<TRecord, TValue> hasFkPkFunc = hasFkPkExpression.Compile();
+            Func<TValue, TRecord> hasOneFunc = hasOneExpression.Compile();
 
             Table<TValue> valuesTable = _tablesCollection.GetTableByRecord<TValue>();
             Table<TRecord> recordsTable = _tablesCollection.GetTableByRecord<TRecord>();
 
             IdRule<TValue> valueIdRule = valuesTable.TableBuilder.EntityBuilder.IdRule;
 
+            PropertyInfo hasFkPkProperty = Helper.GetPropertyInfo(null, hasFkPkExpression);
             PropertyInfo hasOneProperty = Helper.GetPropertyInfo(null, hasOneExpression);
 
-            valuesTable.CollectionChanged += new NotifyCollectionChangedEventHandler((s, e) =>
+            recordsTable.CollectionChanged += new NotifyCollectionChangedEventHandler((s, e) =>
             {
                 if (e.Action == NotifyCollectionChangedAction.Remove)
                 {
-                    TValue value = (TValue)e.OldItems[0];
-                    TRecord record = hasFkPkFunc(value);
+                    TRecord record = (TRecord)e.OldItems[0];
+                    TValue value = hasFkPkFunc(record);
 
-                    hasOneProperty.SetValue(record, null);
+                    hasOneProperty.SetValue(value, null);
                 }
 
                 if (e.Action == NotifyCollectionChangedAction.Reset)
                 {
-                    foreach (TRecord item in recordsTable)
+                    foreach (TValue item in valuesTable)
                     {
-                        TValue? value = valuesTable.FirstOrDefault(x => valueIdRule.GetId(x) == _idRule.GetId(item));
-                        hasOneProperty.SetValue(item, value);
+                        TRecord? record = recordsTable.FirstOrDefault(x => valueIdRule.GetId(item) == _idRule.GetId(x));
+                        hasFkPkProperty.SetValue(item, record);
                     }
                 }
             });
 
             _invokeRelations += (TRecord record) =>
             {
-                TValue? value = valuesTable.FirstOrDefault(x => valueIdRule.GetId(x) == _idRule.GetId(record));
-                hasOneProperty.SetValue(record, value);
+                TValue value = valuesTable.First(x => valueIdRule.GetId(x) == _idRule.GetId(record));
+                hasFkPkProperty.SetValue(record, value);
+
+                hasOneProperty.SetValue(value, record);
             };
         }
 

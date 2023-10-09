@@ -55,6 +55,7 @@ Table<PriorityFilm> priorityFilms = collection.GetTableByRecord<PriorityFilm>();
 
 Film film = films.First();
 PriorityFilm priority = new PriorityFilm { Id = film.Id, CreationTime = DateTime.Now};
+priorityFilms.Add(priority);
 
 Console.WriteLine($"({film.Priority.CreationTime})");
 TablesConsole.WriteTabes(collection);
