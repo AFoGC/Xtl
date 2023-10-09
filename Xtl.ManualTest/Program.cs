@@ -13,7 +13,7 @@ collection.Configure(builder =>
     builder.AddTable<FilmsTable, Film>(x =>
     {
         x.DefaultRecord = new Film() { Name = "Hui3" };
-        x.SetIdGeneration(x => x++);
+        x.SetIdGeneration(x => ++x);
 
         x.AddTableSaveRule(x => x.MarksSystem, 0);
 
@@ -27,7 +27,7 @@ collection.Configure(builder =>
     builder.AddTable<GenresTable, Genre>(x =>
     {
         x.DefaultRecord = new Genre();
-        x.SetIdGeneration(x => x++);
+        x.SetIdGeneration(x => ++x);
 
         x.SetEntityId(x => x.Id);
         x.AddEntitySaveRule(x => x.Name);
@@ -53,14 +53,10 @@ Table<Film> films = collection.GetTableByRecord<Film>();
 Table<Genre> genres = collection.GetTableByRecord<Genre>();
 Table<PriorityFilm> priorityFilms = collection.GetTableByRecord<PriorityFilm>();
 
-Film film = films.First();
-PriorityFilm priority = new PriorityFilm { Id = film.Id, CreationTime = DateTime.Now};
-priorityFilms.Add(priority);
+//films.Add(new Film { Name = "Churka1" });
+//films.Add(new Film { Name = "Churka2" });
+//films.Add(new Film { Name = "Churka3" });
 
-Console.WriteLine($"({film.Priority.CreationTime})");
-TablesConsole.WriteTabes(collection);
-
-priorityFilms.Remove(priority);
 TablesConsole.WriteTabes(collection);
 
 

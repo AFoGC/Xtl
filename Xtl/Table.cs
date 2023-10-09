@@ -26,7 +26,7 @@ namespace Xtl
         {
             _records = new ObservableCollection<T>();
             _records.CollectionChanged += OnRecordsCollectionChanged;
-            LastID = 1;
+            LastID = 0;
         }
 
         public event NotifyCollectionChangedEventHandler? CollectionChanged;
@@ -95,8 +95,17 @@ namespace Xtl
         {
             Clear();
             _tableBuilder.LoadTable(this, tableNode);
-            LastID = _records.Max(x => _tableBuilder.EntityBuilder.IdRule.GetId(x));
-            LastID++;
+            T? record = _records.LastOrDefault();
+
+            if (record != null)
+            {
+                LastID = _tableBuilder.EntityBuilder.IdRule.GetId(record);
+                LastID++;
+            }
+            else
+            {
+                LastID = 0;
+            }
         }
 
         void ICollection<T>.Add(T item)
@@ -118,6 +127,7 @@ namespace Xtl
         public T Add(T item)
         {
             _tableBuilder.EntityBuilder.IdRule.SetNewId(item, LastID);
+            LastID = _tableBuilder.EntityBuilder.IdRule.GetId(item);
 
             AddBinding(item);
             AddInOrder(item);
