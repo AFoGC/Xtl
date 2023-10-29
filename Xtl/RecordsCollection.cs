@@ -24,10 +24,16 @@ namespace Xtl
         public RecordsCollection()
         {
             _records = new ObservableCollection<T>();
+            _records.CollectionChanged += OnRecordsCollectionChanged;
         }
 
         public int Count => _records.Count;
         public bool IsReadOnly => false;
+
+        private void OnRecordsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            CollectionChanged?.Invoke(this, e);
+        }
 
         internal void SetHasOneProperty(PropertyInfo hasOneProperty, PropertyInfo foreignKeyProperty, int parentId)
         {

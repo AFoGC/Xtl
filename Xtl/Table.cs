@@ -29,10 +29,10 @@ namespace Xtl
             LastID = 0;
         }
 
-        public event NotifyCollectionChangedEventHandler? CollectionChanged;
-        public event PropertyChangedEventHandler? RecordsPropertyChanged;
-        public event TableLoadedEventHandler? TableLoaded;
-        public event TableLoadedEventHandler? TableSaved;
+        public override event NotifyCollectionChangedEventHandler? CollectionChanged;
+        public override event PropertyChangedEventHandler? RecordsPropertyChanged;
+        public override event TableLoadedEventHandler? TableLoaded;
+        public override event TableLoadedEventHandler? TableSaved;
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
