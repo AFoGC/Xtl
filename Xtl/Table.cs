@@ -123,7 +123,7 @@ namespace Xtl
             return Add(item);
         }
 
-        public T Add(T item)
+        public virtual T Add(T item)
         {
             _tableBuilder.EntityBuilder.IdRule.SetNewId(item, LastID);
             LastID = _tableBuilder.EntityBuilder.IdRule.GetId(item);
@@ -157,7 +157,7 @@ namespace Xtl
             _records.Add(item);
         }
 
-        public void Clear()
+        public virtual void Clear()
         {
             foreach (var record in _records)
                 RemoveBindings(record);
@@ -175,7 +175,7 @@ namespace Xtl
             _records.CopyTo(array, arrayIndex);
         }
 
-        public bool Remove(T item)
+        public virtual bool Remove(T item)
         {
             RemoveBindings(item);
             return _records.Remove(item);
