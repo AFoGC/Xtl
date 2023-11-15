@@ -22,6 +22,8 @@ namespace Xtl
         public event TablesCollectionLoadEventHandler TablesSaved;
         public event TablesCollectionLoadEventHandler TablesLoading;
         public event TablesCollectionLoadEventHandler TablesLoaded;
+
+        public IEnumerable<BaseTable> Tables => _tables;
         
         public void Save(string path)
         {
